@@ -1,0 +1,5 @@
+www:
+  type: nodejs
+  approot: shadowsocks
+  config:
+    node_version: v0.8.x

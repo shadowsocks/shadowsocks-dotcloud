@@ -1,0 +1,6 @@
+{
+    "server":["shadowsocks-12345678.dotcloud.com"],
+    "local_port":1080,
+    "password":"barfoo!",
+    "timeout":60
+}
