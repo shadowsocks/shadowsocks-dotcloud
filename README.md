@@ -13,19 +13,17 @@ Notice that the protocol is INCOMPATIBLE with the origin shadowsocks.
 usage
 -----------
 
-* Sign up for [dotcloud](https://www.dotcloud.com/).
+Sign up for [dotcloud](https://www.dotcloud.com/).
 
-* Install [dotcloud CLI](http://docs.dotcloud.com/0.4/firststeps/install/).
+Install [dotcloud CLI](http://docs.dotcloud.com/0.4/firststeps/install/).
 
-* Put the code somewhere, for example shadowsocks-dotcloud/. Edit `shadowsocks/config.json`, change the following values:
-
+Put the code somewhere, for example shadowsocks-dotcloud/. Edit `shadowsocks/config.json`, change the following values:
 
     local_port      local port
     password        a password used to encrypt transfer
     timeout         in seconds
 
-* Upload the code. You can choose your own app name other than `shadowsocks`. You'll see your hostname at the end.
-
+Upload the code. You can choose your own app name other than `shadowsocks`. You'll see your hostname at the end.
 
     $ dotcloud create shadowsocks
     Created application "shadowsocks" using the flavor "sandbox"
@@ -36,16 +34,13 @@ usage
     Deployment finished. Your application is available at the following URLs
     www: http://shadowsocks-xxxxxxx.dotcloud.com/
 
-
-* Edit `shadowsocks/config.json`, change the following values:
-
+Edit `shadowsocks/config.json`, change the following values:
 
     server          your server hostname, for example, shadowsocks-xxxxxx.dotcloud.com
 
-* Open terminal, cd into shadowsocks, run `node local.js`.
+Open terminal, cd into shadowsocks, run `node local.js`.
 
-* Change proxy settings of your browser into
-
+Change proxy settings of your browser into
 
     SOCKS5 127.0.0.1:local_port
 
