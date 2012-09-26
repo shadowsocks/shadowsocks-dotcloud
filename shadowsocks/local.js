@@ -61,12 +61,13 @@
   decryptTable = tables[1];
 
   server = net.createServer(function(connection) {
-    var addrLen, addrToSend, cachedPieces, headerLength, remote, remoteAddr, remotePort, serverUsing, stage;
+    var addrLen, addrToSend, cachedPieces, headerLength, remote, remoteAddr, remotePort, req, serverUsing, stage;
     console.log("local connected");
     console.log("concurrent connections: " + server.connections);
     stage = 0;
     headerLength = 0;
     remote = null;
+    req = null;
     cachedPieces = [];
     addrLen = 0;
     remoteAddr = null;
@@ -74,7 +75,7 @@
     addrToSend = "";
     serverUsing = getServer();
     connection.on("data", function(data) {
-      var addrtype, buf, cmd, reply, req, tempBuf;
+      var addrtype, buf, cmd, reply, tempBuf;
       if (stage === 5) {
         encrypt.encrypt(encryptTable, data);
         if (!remote.write(data)) {
@@ -131,7 +132,17 @@
               'Upgrade': 'websocket'
             }
           });
+          req.setNoDelay(true);
           req.end();
+          req.setTimeout(timeout, function() {
+            req.abort();
+            return connection.end();
+          });
+          req.on('error', function() {
+            console.warn('req error');
+            req.abort();
+            return connection.end();
+          });
           req.on('upgrade', function(res, conn, upgradeHead) {
             var addrToSendBuf, i, piece;
             remote = conn;
@@ -203,12 +214,19 @@
       myScheduler.serverSucceeded(serverUsing);
       console.log("local disconnected");
       if (remote) {
+        console.log("remote.end()");
         remote.end();
+      } else if (req) {
+        console.log("req.abort()");
+        req.abort();
       }
       return console.log("concurrent connections: " + server.connections);
     });
     connection.on("error", function() {
       console.warn("local error");
+      if (req) {
+        req.abort();
+      }
       if (remote) {
         remote.destroy();
       }
@@ -220,6 +238,9 @@
       }
     });
     return connection.setTimeout(timeout, function() {
+      if (req) {
+        req.abort();
+      }
       if (remote) {
         remote.destroy();
       }

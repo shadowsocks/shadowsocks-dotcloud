@@ -61,6 +61,7 @@ server = net.createServer((connection) ->
   stage = 0
   headerLength = 0
   remote = null
+  req = null
   cachedPieces = []
   addrLen = 0
   remoteAddr = null
@@ -126,7 +127,15 @@ server = net.createServer((connection) ->
             'Connection': 'Upgrade',
             'Upgrade': 'websocket'
         )
+        req.setNoDelay true
         req.end()
+        req.setTimeout timeout, ->
+          req.abort()
+          connection.end()
+        req.on 'error', ->
+          console.warn 'req error'
+          req.abort()
+          connection.end()
         req.on 'upgrade', (res, conn, upgradeHead) ->
           remote = conn
           console.log "remote got upgrade"
@@ -190,11 +199,17 @@ server = net.createServer((connection) ->
   connection.on "end", ->
     myScheduler.serverSucceeded(serverUsing)
     console.log "local disconnected"
-    remote.end()  if remote
+    if remote
+      console.log "remote.end()"
+      remote.end()
+    else if req
+      console.log "req.abort()"
+      req.abort()
     console.log "concurrent connections: " + server.connections
 
   connection.on "error", ->
     console.warn "local error"
+    req.abort() if req
     remote.destroy()  if remote
     console.log "concurrent connections: " + server.connections
 
@@ -203,6 +218,7 @@ server = net.createServer((connection) ->
     remote.resume()  if remote and stage is 5
 
   connection.setTimeout timeout, ->
+    req.abort() if req
     remote.destroy()  if remote
     connection.destroy()
 )
