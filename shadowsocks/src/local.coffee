@@ -46,7 +46,7 @@ SERVER = config.server
 REMOTE_PORT = 80
 PORT = config.local_port
 KEY = config.password
-timeout = Math.floor(config.timeout * 1000)
+timeout = Math.floor(config.timeout) #config.timeout's unit is ms now.
 
 myScheduler = new scheduler.Scheduler SERVER
 getServer = ->
@@ -60,7 +60,7 @@ encryptTable = tables[0]
 decryptTable = tables[1]
 
 server = net.createServer((connection) ->
-  console.log "server connected"
+  console.log "local connected"
   console.log "concurrent connections: " + server.connections
   stage = 0
   headerLength = 0
@@ -171,9 +171,9 @@ server = net.createServer((connection) ->
             if stage is 4
               console.warn "remote connection refused"
               connection.destroy()
-              return
+            else
               console.warn "remote error"
-              connection.end()
+              connection.destroy()
             console.log "concurrent connections: " + server.connections
 
           remote.on "drain", ->
@@ -211,7 +211,7 @@ server = net.createServer((connection) ->
     console.log "concurrent connections: " + server.connections
 
   connection.on "error", ->
-    console.warn "server error"
+    console.warn "local error"
     req.abort() if req
     remote.destroy()  if remote
     console.log "concurrent connections: " + server.connections

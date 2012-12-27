@@ -42,7 +42,7 @@ for k, v of configFromArgs
   config[k] = v
 PORT = 8080
 KEY = config.password
-timeout = Math.floor(config.timeout * 1000)
+timeout = Math.floor(config.timeout) #config.timeout's unit is ms now.
 
 net = require("net")
 encrypt = require("./encrypt")
@@ -53,7 +53,7 @@ decryptTable = tables[1]
 
 server = http.createServer (req, res) ->
   res.writeHead 200, 'Content-Type':'text/plain'
-  res.end 'ok'
+  res.end 'Good Day!'
 
 server.on 'upgrade', (req, connection, head) ->
   connection.write 'HTTP/1.1 101 Web Socket Protocol Handshake\r\n' +

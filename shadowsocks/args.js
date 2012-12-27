@@ -5,7 +5,6 @@
     var defination, lastKey, nextIsValue, oneArg, result, _, _ref;
     defination = {
       '-l': 'local_port',
-      '-p': 'server_port',
       '-s': 'server',
       '-k': 'password'
     };

@@ -49,7 +49,7 @@
 
   KEY = config.password;
 
-  timeout = Math.floor(config.timeout * 1000);
+  timeout = Math.floor(config.timeout);
 
   myScheduler = new scheduler.Scheduler(SERVER);
 
@@ -71,7 +71,7 @@
 
   server = net.createServer(function(connection) {
     var aServer, addrLen, addrToSend, cachedPieces, headerLength, remote, remoteAddr, remotePort, req, stage;
-    console.log("server connected");
+    console.log("local connected");
     console.log("concurrent connections: " + server.connections);
     stage = 0;
     headerLength = 0;
@@ -185,9 +185,9 @@
               if (stage === 4) {
                 console.warn("remote connection refused");
                 connection.destroy();
-                return;
+              } else {
                 console.warn("remote error");
-                connection.end();
+                connection.destroy();
               }
               return console.log("concurrent connections: " + server.connections);
             });
@@ -232,7 +232,7 @@
       return console.log("concurrent connections: " + server.connections);
     });
     connection.on("error", function() {
-      console.warn("server error");
+      console.warn("local error");
       if (req) {
         req.abort();
       }

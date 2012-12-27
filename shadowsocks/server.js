@@ -43,7 +43,7 @@
 
   KEY = config.password;
 
-  timeout = Math.floor(config.timeout * 1000);
+  timeout = Math.floor(config.timeout);
 
   net = require("net");
 
@@ -61,7 +61,7 @@
     res.writeHead(200, {
       'Content-Type': 'text/plain'
     });
-    return res.end('ok');
+    return res.end('Good Day!');
   });
 
   server.on('upgrade', function(req, connection, head) {

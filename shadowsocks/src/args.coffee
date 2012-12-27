@@ -2,7 +2,6 @@
 exports.parseArgs = ->
   defination =
     '-l': 'local_port'
-    '-p': 'server_port'
     '-s': 'server'
     '-k': 'password'
 
