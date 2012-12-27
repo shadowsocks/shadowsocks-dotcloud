@@ -15,13 +15,13 @@ usage
 
 Sign up for [dotcloud](https://www.dotcloud.com/).
 
-Install [dotcloud CLI](http://docs.dotcloud.com/0.4/firststeps/install/).
+Install [dotcloud CLI](https://docs.dotcloud.com/0.9/firststeps/install/).
 
 Put the code somewhere, for example shadowsocks-dotcloud/. Edit `shadowsocks/config.json`, change the following values:
 
     local_port      local port
     password        a password used to encrypt transfer
-    timeout         in seconds
+    timeout         in milliseconds
 
 Upload the code. You can choose your own app name other than `shadowsocks`. You'll see your hostname at the end.
 
@@ -32,7 +32,7 @@ Upload the code. You can choose your own app name other than `shadowsocks`. You'
     # upload shadowsocks-dotcloud/ ssh://dotcloud@uploader.dotcloud.com:443/shadowsocks
     ...
     Deployment finished. Your application is available at the following URLs
-    www: http://shadowsocks-xxxxxxx.dotcloud.com/
+    www: http://shadowsocks-YOURUSERNAME.dotcloud.com/
 
 Edit `shadowsocks/config.json`, change the following values:
 
