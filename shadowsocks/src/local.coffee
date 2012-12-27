@@ -46,7 +46,7 @@ SERVER = config.server
 REMOTE_PORT = 80
 PORT = config.local_port
 KEY = config.password
-timeout = Math.floor(config.timeout) #config.timeout's unit is ms now.
+timeout = Math.floor(config.timeout * 1000)
 
 myScheduler = new scheduler.Scheduler SERVER
 getServer = ->

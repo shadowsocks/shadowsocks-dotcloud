@@ -43,7 +43,7 @@
 
   KEY = config.password;
 
-  timeout = Math.floor(config.timeout);
+  timeout = Math.floor(config.timeout * 1000);
 
   net = require("net");
 

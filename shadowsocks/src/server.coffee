@@ -42,7 +42,7 @@ for k, v of configFromArgs
   config[k] = v
 PORT = 8080
 KEY = config.password
-timeout = Math.floor(config.timeout) #config.timeout's unit is ms now.
+timeout = Math.floor(config.timeout * 1000)
 
 net = require("net")
 encrypt = require("./encrypt")

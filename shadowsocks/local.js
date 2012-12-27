@@ -49,7 +49,7 @@
 
   KEY = config.password;
 
-  timeout = Math.floor(config.timeout);
+  timeout = Math.floor(config.timeout * 1000);
 
   myScheduler = new scheduler.Scheduler(SERVER);
 
