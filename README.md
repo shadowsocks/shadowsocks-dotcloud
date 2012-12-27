@@ -21,7 +21,7 @@ Put the code somewhere, for example shadowsocks-dotcloud/. Edit `shadowsocks/con
 
     local_port      local port
     password        a password used to encrypt transfer
-    timeout         in milliseconds
+    timeout         in seconds
 
 Upload the code. You can choose your own app name other than `shadowsocks`. You'll see your hostname at the end.
 
