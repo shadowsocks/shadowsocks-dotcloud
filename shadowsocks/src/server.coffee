@@ -33,12 +33,16 @@ inetAton = (ipStr) ->
       i++
     buf
 fs = require("fs")
+path = require("path")
 http = require("http")
-configContent = fs.readFileSync("config.json")
+configContent = fs.readFileSync(path.resolve(__dirname, "config.json"))
 config = JSON.parse(configContent)
+configFromArgs = require('./args').parseArgs()
+for k, v of configFromArgs
+  config[k] = v
 PORT = 8080
 KEY = config.password
-timeout = Math.floor(config.timeout * 1000)
+timeout = Math.floor(config.timeout) #config.timeout's unit is ms now.
 
 net = require("net")
 encrypt = require("./encrypt")
@@ -49,7 +53,7 @@ decryptTable = tables[1]
 
 server = http.createServer (req, res) ->
   res.writeHead 200, 'Content-Type':'text/plain'
-  res.end 'ok'
+  res.end 'Good Day!'
 
 server.on 'upgrade', (req, connection, head) ->
   connection.write 'HTTP/1.1 101 Web Socket Protocol Handshake\r\n' +
@@ -145,7 +149,7 @@ server.on 'upgrade', (req, connection, head) ->
 
   connection.on "end", ->
     console.log "server disconnected"
-    remote.end()  if remote
+    remote.destroy()  if remote
     console.log "concurrent connections: " + server.connections
 
   connection.on "error", ->
@@ -156,9 +160,9 @@ server.on 'upgrade', (req, connection, head) ->
   connection.on "drain", ->
     remote.resume()  if remote
 
-#  connection.setTimeout timeout, ->
-#    remote.destroy()  if remote
-#    connection.destroy()
+  connection.setTimeout timeout, ->
+    remote.destroy()  if remote
+    connection.destroy()
 
 server.listen PORT, ->
   console.log "server listening at port " + PORT
