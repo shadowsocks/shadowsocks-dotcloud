@@ -1,5 +1,5 @@
 {
-  "name": "shadowsocks-heroku",
+  "name": "shadowsocks-dotcloud",
   "version": "0.0.1",
   "dependencies": {
   },
