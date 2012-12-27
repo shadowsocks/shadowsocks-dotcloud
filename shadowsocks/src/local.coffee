@@ -34,10 +34,14 @@ inetAton = (ipStr) ->
     buf
 
 fs = require("fs")
+path = require("path")
 http = require("http")
 scheduler = require('./scheduler')
-configContent = fs.readFileSync("config.json")
+configContent = fs.readFileSync(path.resolve(__dirname, "config.json"))
 config = JSON.parse(configContent)
+configFromArgs = require('./args').parseArgs()
+for k, v of configFromArgs
+  config[k] = v
 SERVER = config.server
 REMOTE_PORT = 80
 PORT = config.local_port
@@ -67,7 +71,7 @@ server = net.createServer((connection) ->
   remoteAddr = null
   remotePort = null
   addrToSend = ""
-  serverUsing = getServer()
+  aServer = getServer()
   connection.on "data", (data) ->
     if stage is 5
       # pipe sockets
@@ -82,13 +86,13 @@ server = net.createServer((connection) ->
       return
     if stage is 1
       try
-      # +----+-----+-------+------+----------+----------+
-      # |VER | CMD |  RSV  | ATYP | DST.ADDR | DST.PORT |
-      # +----+-----+-------+------+----------+----------+
-      # | 1  |  1  | X'00' |  1   | Variable |    2     |
-      # +----+-----+-------+------+----------+----------+
+        # +----+-----+-------+------+----------+----------+
+        # |VER | CMD |  RSV  | ATYP | DST.ADDR | DST.PORT |
+        # +----+-----+-------+------+----------+----------+
+        # | 1  |  1  | X'00' |  1   | Variable |    2     |
+        # +----+-----+-------+------+----------+----------+
 
-      #cmd and addrtype
+        #cmd and addrtype
         cmd = data[1]
         addrtype = data[3]
         unless cmd is 1
@@ -121,7 +125,7 @@ server = net.createServer((connection) ->
         connection.write buf
         # connect remote server
         req = http.request(
-          host: serverUsing,
+          host: aServer,
           port: REMOTE_PORT,
           headers:
             'Connection': 'Upgrade',
@@ -139,33 +143,7 @@ server = net.createServer((connection) ->
         req.on 'upgrade', (res, conn, upgradeHead) ->
           remote = conn
           console.log "remote got upgrade"
-          remote.on "data", (data) ->
-            encrypt.encrypt decryptTable, data
-            remote.pause()  unless connection.write(data)
-
-          remote.on "end", ->
-            console.log "remote disconnected"
-            connection.end()
-            console.log "concurrent connections: " + server.connections
-
-          remote.on "error", ->
-            myScheduler.serverFailed(serverUsing)
-            if stage is 4
-              console.warn "remote connection refused"
-              connection.destroy()
-            else
-              console.warn "remote error"
-              connection.end()
-            console.log "concurrent connections: " + server.connections
-
-          remote.on "drain", ->
-            connection.resume()
-
-          remote.setTimeout timeout, ->
-            connection.end()
-            remote.destroy()
-
-          console.log "connecting #{remoteAddr} via #{serverUsing}"
+          console.log "connecting #{remoteAddr} via #{aServer}"
           addrToSendBuf = new Buffer(addrToSend, "binary")
           encrypt.encrypt encryptTable, addrToSendBuf
           remote.write addrToSendBuf
@@ -176,9 +154,34 @@ server = net.createServer((connection) ->
             encrypt.encrypt encryptTable, piece
             remote.write piece
             i++
-          cachedPieces = null
-          # save memory
+          cachedPieces = null # save memory
           stage = 5
+
+          remote.on "data", (data) ->
+            encrypt.encrypt decryptTable, data
+            remote.pause()  unless connection.write(data)
+
+          remote.on "end", ->
+            console.log "remote disconnected"
+            connection.end()
+            console.log "concurrent connections: " + server.connections
+
+          remote.on "error", ->
+            myScheduler.serverFailed(aServer)
+            if stage is 4
+              console.warn "remote connection refused"
+              connection.destroy()
+            else
+              console.warn "remote error"
+              connection.destroy()
+            console.log "concurrent connections: " + server.connections
+
+          remote.on "drain", ->
+            connection.resume()
+
+          remote.setTimeout timeout, ->
+            connection.end()
+            remote.destroy()
 
         if data.length > headerLength
           buf = new Buffer(data.length - headerLength)
@@ -192,16 +195,16 @@ server = net.createServer((connection) ->
         connection.destroy()
         remote.destroy()  if remote
     else cachedPieces.push data  if stage is 4
-  # remote server not connected
-  # cache received buffers
-  # make sure no data is lost
+      # remote server not connected
+      # cache received buffers
+      # make sure no data is lost
 
   connection.on "end", ->
-    myScheduler.serverSucceeded(serverUsing)
-    console.log "local disconnected"
+    myScheduler.serverSucceeded(aServer)
+    console.log "server disconnected"
     if remote
-      console.log "remote.end()"
-      remote.end()
+      console.log "remote.destroy()"
+      remote.destroy()
     else if req
       console.log "req.abort()"
       req.abort()

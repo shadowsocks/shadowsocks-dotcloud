@@ -1,6 +1,6 @@
 {
-    "server":["shadowsocks-12345678.dotcloud.com"],
+    "server":["projectname-username.dotcloud.com"],
     "local_port":1080,
-    "password":"barfoo!",
-    "timeout":60
+    "password":"`try*(^^$some^$%^complex>:<>?~password/",
+    "timeout":30
 }
