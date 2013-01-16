@@ -28,7 +28,7 @@ Upload the code. You can choose your own app name other than `shadowsocks`. You'
     $ dotcloud create shadowsocks
     Created application "shadowsocks" using the flavor "sandbox"
     ...
-    $ dotcloud push shadowsocks shadowsocks-dotcloud/
+    $ dotcloud push --application shadowsocks shadowsocks-dotcloud/
     # upload shadowsocks-dotcloud/ ssh://dotcloud@uploader.dotcloud.com:443/shadowsocks
     ...
     Deployment finished. Your application is available at the following URLs
