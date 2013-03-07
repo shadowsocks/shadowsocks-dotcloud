@@ -3,5 +3,5 @@
     "local_port":1080,
     "password":"`try*(^^$some^$%^complex>:<>?~password/",
     "timeout":30,
-    "method":"rc4"
+    "method":null
 }
