@@ -19,9 +19,11 @@ Install [dotcloud CLI](https://docs.dotcloud.com/0.9/firststeps/install/).
 
 Put the code somewhere, for example shadowsocks-dotcloud/. Edit `shadowsocks/config.json`, change the following values:
 
+    server          your server hostname, for example, shadowsocks-YOURUSERNAME.dotcloud.com
     local_port      local port
     password        a password used to encrypt transfer
     timeout         in seconds
+    method          encryption method, null by default, or use "rc4"
 
 Upload the code. You can choose your own app name other than `shadowsocks`. You'll see your hostname at the end.
 
@@ -33,10 +35,6 @@ Upload the code. You can choose your own app name other than `shadowsocks`. You'
     ...
     Deployment finished. Your application is available at the following URLs
     www: http://shadowsocks-YOURUSERNAME.dotcloud.com/
-
-Edit `shadowsocks/config.json`, change the following values:
-
-    server          your server hostname, for example, shadowsocks-xxxxxx.dotcloud.com
 
 Open terminal, cd into shadowsocks, run `node local.js`.
 

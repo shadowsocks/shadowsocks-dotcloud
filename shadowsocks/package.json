@@ -1,6 +1,6 @@
 {
   "name": "shadowsocks-dotcloud",
-  "version": "0.0.1",
+  "version": "0.9.6",
   "dependencies": {
   },
   "engines": {

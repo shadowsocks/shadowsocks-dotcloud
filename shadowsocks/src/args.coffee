@@ -3,8 +3,11 @@ exports.parseArgs = ->
   defination =
     '-l': 'local_port'
     '-s': 'server'
-    '-k': 'password'
-
+    '-k': 'password',
+    '-c': 'config_file',
+    '-m': 'method'
+    
+    
   result = {}
   nextIsValue = false
   lastKey = null
@@ -17,3 +20,4 @@ exports.parseArgs = ->
       nextIsValue = true
   result
 
+exports.version = "shadowsocks-dotcloud v0.9.6"
