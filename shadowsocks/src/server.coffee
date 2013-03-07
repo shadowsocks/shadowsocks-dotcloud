@@ -22,7 +22,6 @@ net = require("net")
 fs = require("fs")
 path = require("path")
 http = require("http")
-util = require('util')
 args = require("./args")
 Encryptor = require("./encrypt").Encryptor
 
@@ -51,145 +50,125 @@ for k, v of configFromArgs
   config[k] = v
 timeout = Math.floor(config.timeout * 1000)
 portPassword = config.port_password
-port = 8080
-key = config.password
+PORT = 8080
+KEY = config.password
 METHOD = config.method
-SERVER = config.server
+#SERVER = config.server
 
-if portPassword 
-  if port or key
-    util.log 'warning: port_password should not be used with server_port and password. server_port and password will be ignored'
-else
-  portPassword = {}
-  portPassword[port.toString()] = key
-    
-  
-for port, key of portPassword
-  (->
-    # let's use enclosures to seperate scopes of different servers
-    PORT = port
-    KEY = key
-#    util.log "calculating ciphers for port #{PORT}"
 
-    server = http.createServer (req, res) ->
-      res.writeHead 200, 'Content-Type':'text/plain'
-      res.end 'Good Day!'
+server = http.createServer (req, res) ->
+  res.writeHead 200, 'Content-Type':'text/plain'
+  res.end 'Good Day!'
 
-    server.on 'upgrade', ((req, connection, head) ->
-      connection.write 'HTTP/1.1 101 Web Socket Protocol Handshake\r\n' +
-      'Upgrade: WebSocket\r\n' +
-      'Connection: Upgrade\r\n' +
-      '\r\n'
-      util.log "server connected"
-      util.log "concurrent connections: " + server.connections
-      encryptor = new Encryptor(KEY, METHOD)
-      stage = 0
-      headerLength = 0
-      remote = null
-      cachedPieces = []
-      addrLen = 0
-      remoteAddr = null
-      remotePort = null
-      connection.on "data", (data) ->
-        data = encryptor.decrypt data
-        if stage is 5
-          connection.pause()  unless remote.write(data)
+server.on 'upgrade', (req, connection, head) ->
+  connection.write 'HTTP/1.1 101 Web Socket Protocol Handshake\r\n' +
+    'Upgrade: WebSocket\r\n' +
+    'Connection: Upgrade\r\n' +
+    '\r\n'
+  console.log "server connected"
+  console.log "concurrent connections: " + server.connections
+  encryptor = new Encryptor(KEY, METHOD)
+  stage = 0
+  headerLength = 0
+  remote = null
+  cachedPieces = []
+  addrLen = 0
+  remoteAddr = null
+  remotePort = null
+  connection.on "data", (data) ->
+    data = encryptor.decrypt data
+    if stage is 5
+      connection.pause()  unless remote.write(data)
+      return
+    if stage is 0
+      try
+        addrtype = data[0]
+        if addrtype is 3
+          addrLen = data[1]
+        else unless addrtype is 1
+          console.warn "unsupported addrtype: " + addrtype
+          connection.end()
           return
-        if stage is 0
-          try
-            addrtype = data[0]
-            if addrtype is 3
-              addrLen = data[1]
-            else unless addrtype is 1
-              util.log "unsupported addrtype: " + addrtype
-              console.log data
-              connection.end()
-              return
-            # read address and port
-            if addrtype is 1
-              remoteAddr = inetNtoa(data.slice(1, 5))
-              remotePort = data.readUInt16BE(5)
-              headerLength = 7
-            else
-              remoteAddr = data.slice(2, 2 + addrLen).toString("binary")
-              remotePort = data.readUInt16BE(2 + addrLen)
-              headerLength = 2 + addrLen + 2
-            # connect remote server
-            remote = net.connect(remotePort, remoteAddr, ->
-              util.log "connecting #{remoteAddr}:#{remotePort}"
-              i = 0
-    
-              while i < cachedPieces.length
-                piece = cachedPieces[i]
-                remote.write piece
-                i++
-              cachedPieces = null # save memory
-              stage = 5
-            )
-            remote.on "data", (data) ->
-              data = encryptor.encrypt data
-              remote.pause()  unless connection.write(data)
-    
-            remote.on "end", ->
-              util.log "remote disconnected"
-              util.log "concurrent connections: " + server.connections
-              connection.end()
-    
-            remote.on "error", (e)->
-              util.log "remote #{remoteAddr}:#{remotePort} error: #{e}"
-              connection.destroy()
-              util.log "concurrent connections: " + server.connections
+        # read address and port
+        if addrtype is 1
+          remoteAddr = inetNtoa(data.slice(1, 5))
+          remotePort = data.readUInt16BE(5)
+          headerLength = 7
+        else
+          remoteAddr = data.slice(2, 2 + addrLen).toString("binary")
+          remotePort = data.readUInt16BE(2 + addrLen)
+          headerLength = 2 + addrLen + 2
+        console.log remoteAddr
+        # connect remote server
+        remote = net.connect(remotePort, remoteAddr, ->
+          console.log "connecting " + remoteAddr
+          i = 0
 
-            remote.on "drain", ->
-              connection.resume()
+          while i < cachedPieces.length
+            piece = cachedPieces[i]
+            remote.write piece
+            i++
+          cachedPieces = null # save memory
+          stage = 5
+        )
+        remote.on "data", (data) ->
+          data = encryptor.encrypt data
+          remote.pause()  unless connection.write(data)
+
+        remote.on "end", ->
+          console.log "remote disconnected"
+          console.log "concurrent connections: " + server.connections
+          connection.end()
     
-            remote.setTimeout timeout, ->
-              connection.end()
-              remote.destroy()
-    
-            if data.length > headerLength
-              # make sure no data is lost
-              buf = new Buffer(data.length - headerLength)
-              data.copy buf, 0, headerLength
-              cachedPieces.push buf
-              buf = null
-            stage = 4
-          catch e
-            # may encouter index out of range
-            util.log e
-            connection.destroy()
-            remote.destroy()  if remote
-        else cachedPieces.push data  if stage is 4
-          # remote server not connected
-          # cache received buffers
+        remote.on "error", (e)->
+          console.log "remote : #{e}"
+          connection.destroy()
+          console.log "concurrent connections: " + server.connections
+
+        remote.on "drain", ->
+          connection.resume()
+
+        remote.setTimeout timeout, ->
+          connection.end()
+          remote.destroy()
+
+        if data.length > headerLength
           # make sure no data is lost
-    
-      connection.on "end", ->
-        util.log "server disconnected"
-        remote.destroy()  if remote
-        util.log "concurrent connections: " + server.connections
-
-      connection.on "error", (e)->
-        util.log "server error: #{e}"
-        remote.destroy()  if remote
-        util.log "concurrent connections: " + server.connections
-
-      connection.on "drain", ->
-        remote.resume()  if remote
-    
-      connection.setTimeout timeout, ->
-        remote.destroy()  if remote
+          buf = new Buffer(data.length - headerLength)
+          data.copy buf, 0, headerLength
+          cachedPieces.push buf
+          buf = null
+        stage = 4
+      catch e
+        # may encouter index out of range
+        console.warn e
         connection.destroy()
-    )
-    servers = SERVER
-    unless servers instanceof Array
-      servers = [servers]
-    for server_ip in servers
-      server.listen PORT, server_ip, ->
-        util.log "server listening at #{server_ip}:#{PORT} "
-    
-    server.on "error", (e) ->
-      util.warn "Address in use, aborting"  if e.code is "EADDRINUSE"
-      process.exit 1
-  )()
+        remote.destroy()  if remote
+    else cachedPieces.push data  if stage is 4
+      # remote server not connected
+      # cache received buffers
+      # make sure no data is lost
 
+  connection.on "end", ->
+    console.log "server disconnected"
+    remote.destroy()  if remote
+    console.log "concurrent connections: " + server.connections
+
+  connection.on "error", (e)->
+    console.warn "server : #{e}"
+    remote.destroy()  if remote
+    console.log "concurrent connections: " + server.connections
+
+  connection.on "drain", ->
+    remote.resume()  if remote
+
+  connection.setTimeout timeout, ->
+    remote.destroy()  if remote
+    connection.destroy()
+
+server.listen PORT, ->
+  console.log "server listening at port " + PORT
+
+server.on "error", (e) ->
+  console.warn "Address in use, aborting"  if e.code is "EADDRINUSE"
+  process.exit 1
