@@ -6,7 +6,9 @@
     defination = {
       '-l': 'local_port',
       '-s': 'server',
-      '-k': 'password'
+      '-k': 'password',
+      '-c': 'config_file',
+      '-m': 'method'
     };
     result = {};
     nextIsValue = false;
@@ -24,5 +26,7 @@
     }
     return result;
   };
+
+  exports.version = "shadowsocks-dotcloud v0.9.6";
 
 }).call(this);

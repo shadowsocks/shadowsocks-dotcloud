@@ -24,12 +24,20 @@
 
   server = child_process.spawn('node', ['server.js']);
 
-  local.on('exit', function() {
-    return server.kill();
+  curlRunning = false;
+
+  local.on('exit', function(code) {
+    server.kill();
+    if (!curlRunning) {
+      return process.exit(code);
+    }
   });
 
-  server.on('exit', function() {
-    return local.kill();
+  server.on('exit', function(code) {
+    local.kill();
+    if (!curlRunning) {
+      return process.exit(code);
+    }
   });
 
   localReady = false;
@@ -41,7 +49,7 @@
   runCurl = function() {
     var curl;
     curlRunning = true;
-    curl = child_process.spawn('curl', ['-v', 'http://www.google.com/', '-L', '--socks5', '127.0.0.1:1080']);
+    curl = child_process.spawn('curl', ['-v', 'http://www.example.com/', '-L', '--socks5-hostname', '127.0.0.1:1080']);
     curl.on('exit', function(code) {
       local.kill();
       server.kill();

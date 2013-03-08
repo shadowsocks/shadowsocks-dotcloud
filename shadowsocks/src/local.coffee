@@ -18,6 +18,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+
+net = require("net")
+http = require("http")
+fs = require("fs")
+path = require("path")
+util = require('util')
+args = require('./args')
+Encryptor = require("./encrypt").Encryptor
+
+console.log(args.version)
+
 inetNtoa = (buf) ->
   buf[0] + "." + buf[1] + "." + buf[2] + "." + buf[3]
 inetAton = (ipStr) ->
@@ -33,35 +44,29 @@ inetAton = (ipStr) ->
       i++
     buf
 
-fs = require("fs")
-path = require("path")
-http = require("http")
-scheduler = require('./scheduler')
 configContent = fs.readFileSync(path.resolve(__dirname, "config.json"))
 config = JSON.parse(configContent)
-configFromArgs = require('./args').parseArgs()
+configFromArgs = args.parseArgs()
 for k, v of configFromArgs
   config[k] = v
 SERVER = config.server
 REMOTE_PORT = 80
 PORT = config.local_port
 KEY = config.password
+METHOD = config.method
 timeout = Math.floor(config.timeout * 1000)
 
-myScheduler = new scheduler.Scheduler SERVER
 getServer = ->
-  myScheduler.getServer()
+  if SERVER instanceof Array
+    SERVER[Math.floor(Math.random() * SERVER.length)]
+  else
+    SERVER
 
-net = require("net")
-encrypt = require("./encrypt")
-console.log "calculating ciphers"
-tables = encrypt.getTable(KEY)
-encryptTable = tables[0]
-decryptTable = tables[1]
 
 server = net.createServer((connection) ->
-  console.log "local connected"
-  console.log "concurrent connections: " + server.connections
+  util.log "local connected"
+  util.log "concurrent connections: " + server.connections
+  encryptor = new Encryptor(KEY, METHOD)
   stage = 0
   headerLength = 0
   remote = null
@@ -75,7 +80,7 @@ server = net.createServer((connection) ->
   connection.on "data", (data) ->
     if stage is 5
       # pipe sockets
-      encrypt.encrypt encryptTable, data
+      data = encryptor.encrypt data
       connection.pause()  unless remote.write(data)
       return
     if stage is 0
@@ -96,14 +101,14 @@ server = net.createServer((connection) ->
         cmd = data[1]
         addrtype = data[3]
         unless cmd is 1
-          console.warn "unsupported cmd: " + cmd
+          util.log "unsupported cmd: " + cmd
           reply = new Buffer("\u0005\u0007\u0000\u0001", "binary")
           connection.end reply
           return
         if addrtype is 3
           addrLen = data[4]
         else unless addrtype is 1
-          console.warn "unsupported addrtype: " + addrtype
+          util.log "unsupported addrtype: " + addrtype
           connection.end()
           return
         addrToSend = data.slice(3, 4).toString("binary")
@@ -136,45 +141,43 @@ server = net.createServer((connection) ->
         req.setTimeout timeout, ->
           req.abort()
           connection.end()
-        req.on 'error', ->
-          console.warn 'req error'
+        req.on 'error', (e)->
+          console.warn "req #{e}"
           req.abort()
           connection.end()
         req.on 'upgrade', (res, conn, upgradeHead) ->
           remote = conn
-          console.log "remote got upgrade"
-          console.log "connecting #{remoteAddr} via #{aServer}"
+          util.log "remote got upgrade"
+          util.log "connecting #{remoteAddr} via #{aServer}"
           addrToSendBuf = new Buffer(addrToSend, "binary")
-          encrypt.encrypt encryptTable, addrToSendBuf
+          addrToSendBuf = encryptor.encrypt addrToSendBuf
           remote.write addrToSendBuf
           i = 0
 
           while i < cachedPieces.length
             piece = cachedPieces[i]
-            encrypt.encrypt encryptTable, piece
+            piece = encryptor.encrypt piece
             remote.write piece
             i++
           cachedPieces = null # save memory
           stage = 5
 
           remote.on "data", (data) ->
-            encrypt.encrypt decryptTable, data
+            data = encryptor.decrypt data
             remote.pause()  unless connection.write(data)
 
           remote.on "end", ->
-            console.log "remote disconnected"
+            util.log "remote disconnected"
             connection.end()
-            console.log "concurrent connections: " + server.connections
+            util.log "concurrent connections: " + server.connections
 
-          remote.on "error", ->
-            myScheduler.serverFailed(aServer)
+          remote.on "error", (e)->
+            util.log "remote #{remoteAddr}:#{remotePort} error: #{e}"
             if stage is 4
-              console.warn "remote connection refused"
               connection.destroy()
-            else
-              console.warn "remote error"
-              connection.destroy()
-            console.log "concurrent connections: " + server.connections
+              return
+            connection.end()
+            util.log "concurrent connections: " + server.connections
 
           remote.on "drain", ->
             connection.resume()
@@ -191,7 +194,7 @@ server = net.createServer((connection) ->
         stage = 4
       catch e
       # may encounter index out of range
-        console.warn e
+        util.log e
         connection.destroy()
         remote.destroy()  if remote
     else cachedPieces.push data  if stage is 4
@@ -200,21 +203,14 @@ server = net.createServer((connection) ->
       # make sure no data is lost
 
   connection.on "end", ->
-    myScheduler.serverSucceeded(aServer)
-    console.log "server disconnected"
-    if remote
-      console.log "remote.destroy()"
-      remote.destroy()
-    else if req
-      console.log "req.abort()"
-      req.abort()
-    console.log "concurrent connections: " + server.connections
+    remote.destroy()  if remote
+    util.log "concurrent connections: " + server.connections
 
-  connection.on "error", ->
-    console.warn "local error"
+  connection.on "error", (e)->
+    util.log "local error: #{e}"
     req.abort() if req
     remote.destroy()  if remote
-    console.log "concurrent connections: " + server.connections
+    util.log "concurrent connections: " + server.connections
 
   connection.on "drain", ->
     # calling resume() when remote not is connected will crash node.js
@@ -226,7 +222,8 @@ server = net.createServer((connection) ->
     connection.destroy()
 )
 server.listen PORT, ->
-  console.log "server listening at port " + PORT
+  util.log "server listening at port " + PORT
 
 server.on "error", (e) ->
-  console.warn "Address in use, aborting"  if e.code is "EADDRINUSE"
+  util.log "Address in use, aborting"  if e.code is "EADDRINUSE"
+  process.exit 1

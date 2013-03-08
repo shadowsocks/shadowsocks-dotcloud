@@ -18,6 +18,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+net = require("net")
+fs = require("fs")
+path = require("path")
+http = require("http")
+args = require("./args")
+Encryptor = require("./encrypt").Encryptor
+
+console.log(args.version)
+
 inetNtoa = (buf) ->
   buf[0] + "." + buf[1] + "." + buf[2] + "." + buf[3]
 inetAton = (ipStr) ->
@@ -32,24 +41,20 @@ inetAton = (ipStr) ->
       buf[i] = +parts[i]
       i++
     buf
-fs = require("fs")
-path = require("path")
-http = require("http")
-configContent = fs.readFileSync(path.resolve(__dirname, "config.json"))
+
+configFromArgs = args.parseArgs()
+configFile = configFromArgs.config_file or path.resolve(__dirname, "config.json")
+configContent = fs.readFileSync(configFile)
 config = JSON.parse(configContent)
-configFromArgs = require('./args').parseArgs()
 for k, v of configFromArgs
   config[k] = v
+timeout = Math.floor(config.timeout * 1000)
+portPassword = config.port_password
 PORT = 8080
 KEY = config.password
-timeout = Math.floor(config.timeout * 1000)
+METHOD = config.method
+#SERVER = config.server
 
-net = require("net")
-encrypt = require("./encrypt")
-console.log "calculating ciphers"
-tables = encrypt.getTable(KEY)
-encryptTable = tables[0]
-decryptTable = tables[1]
 
 server = http.createServer (req, res) ->
   res.writeHead 200, 'Content-Type':'text/plain'
@@ -62,6 +67,7 @@ server.on 'upgrade', (req, connection, head) ->
     '\r\n'
   console.log "server connected"
   console.log "concurrent connections: " + server.connections
+  encryptor = new Encryptor(KEY, METHOD)
   stage = 0
   headerLength = 0
   remote = null
@@ -70,7 +76,7 @@ server.on 'upgrade', (req, connection, head) ->
   remoteAddr = null
   remotePort = null
   connection.on "data", (data) ->
-    encrypt.encrypt decryptTable, data
+    data = encryptor.decrypt data
     if stage is 5
       connection.pause()  unless remote.write(data)
       return
@@ -106,21 +112,17 @@ server.on 'upgrade', (req, connection, head) ->
           stage = 5
         )
         remote.on "data", (data) ->
-          encrypt.encrypt encryptTable, data
+          data = encryptor.encrypt data
           remote.pause()  unless connection.write(data)
 
         remote.on "end", ->
           console.log "remote disconnected"
           console.log "concurrent connections: " + server.connections
           connection.end()
-
-        remote.on "error", ->
-          if stage is 4
-            console.warn "remote connection refused"
-            connection.end()
-            return
-          console.warn "remote error"
-          connection.end()
+    
+        remote.on "error", (e)->
+          console.log "remote : #{e}"
+          connection.destroy()
           console.log "concurrent connections: " + server.connections
 
         remote.on "drain", ->
@@ -152,8 +154,8 @@ server.on 'upgrade', (req, connection, head) ->
     remote.destroy()  if remote
     console.log "concurrent connections: " + server.connections
 
-  connection.on "error", ->
-    console.warn "server error"
+  connection.on "error", (e)->
+    console.warn "server : #{e}"
     remote.destroy()  if remote
     console.log "concurrent connections: " + server.connections
 
@@ -169,5 +171,4 @@ server.listen PORT, ->
 
 server.on "error", (e) ->
   console.warn "Address in use, aborting"  if e.code is "EADDRINUSE"
-
-console.log server.maxConnections
+  process.exit 1
