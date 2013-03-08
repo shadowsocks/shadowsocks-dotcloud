@@ -1,8 +1,6 @@
-language: node_js
-node_js:
- - "0.8"
- - "0.6"
+language: ruby
 before_install:
+  - sudo apt-get install nodejs
   - npm install coffee-script
   - type -a cake
 script:
