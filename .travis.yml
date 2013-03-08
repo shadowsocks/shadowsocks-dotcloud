@@ -4,6 +4,7 @@ node_js:
  - "0.6"
 before_install:
   - npm install coffee-script
+  - type -a cake
 script:
-  - cd shadowsocks; cake build
-  - cd shadowsocks; cake test
+  - cake build
+  - cake test
