@@ -48,4 +48,4 @@ troubleshooting
 
 If there is something wrong, you can check the logs by:
 
-    $ dotcloud logs shadowsocks.www
+    $ dotcloud logs www --application shadowsocks
