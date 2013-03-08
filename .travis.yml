@@ -1,0 +1,9 @@
+language: node_js
+node_js:
+ - "0.8"
+ - "0.6"
+before_install:
+  - npm install coffee-script
+script:
+  - cd shadowsocks; cake build
+  - cd shadowsocks; cake test
