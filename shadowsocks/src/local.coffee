@@ -50,7 +50,7 @@ configFromArgs = args.parseArgs()
 for k, v of configFromArgs
   config[k] = v
 SERVER = config.server
-REMOTE_PORT = 8080
+REMOTE_PORT = 80
 PORT = config.local_port
 KEY = config.password
 METHOD = config.method
@@ -64,9 +64,9 @@ getServer = ->
 
 
 server = net.createServer((connection) ->
-  encryptor = new Encryptor(KEY, METHOD)
   util.log "local connected"
   util.log "concurrent connections: " + server.connections
+  encryptor = new Encryptor(KEY, METHOD)
   stage = 0
   headerLength = 0
   remote = null
@@ -76,6 +76,7 @@ server = net.createServer((connection) ->
   remoteAddr = null
   remotePort = null
   addrToSend = ""
+  aServer = getServer()
   connection.on "data", (data) ->
     if stage is 5
       # pipe sockets
@@ -128,7 +129,6 @@ server = net.createServer((connection) ->
         buf.writeInt16BE remotePort, 8
         connection.write buf
         # connect remote server
-        aServer = getServer()
         req = http.request(
           host: aServer,
           port: REMOTE_PORT,
@@ -148,7 +148,7 @@ server = net.createServer((connection) ->
         req.on 'upgrade', (res, conn, upgradeHead) ->
           remote = conn
           util.log "remote got upgrade"
-          util.log "connecting #{remoteAddr}:#{remotePort}"
+          util.log "connecting #{remoteAddr} via #{aServer}"
           addrToSendBuf = new Buffer(addrToSend, "binary")
           addrToSendBuf = encryptor.encrypt addrToSendBuf
           remote.write addrToSendBuf
@@ -193,7 +193,7 @@ server = net.createServer((connection) ->
           buf = null
         stage = 4
       catch e
-        # may encounter index out of range
+      # may encounter index out of range
         util.log e
         connection.destroy()
         remote.destroy()  if remote

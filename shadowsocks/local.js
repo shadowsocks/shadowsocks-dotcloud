@@ -51,7 +51,7 @@
 
   SERVER = config.server;
 
-  REMOTE_PORT = 8080;
+  REMOTE_PORT = 80;
 
   PORT = config.local_port;
 
@@ -70,10 +70,10 @@
   };
 
   server = net.createServer(function(connection) {
-    var addrLen, addrToSend, cachedPieces, encryptor, headerLength, remote, remoteAddr, remotePort, req, stage;
-    encryptor = new Encryptor(KEY, METHOD);
+    var aServer, addrLen, addrToSend, cachedPieces, encryptor, headerLength, remote, remoteAddr, remotePort, req, stage;
     util.log("local connected");
     util.log("concurrent connections: " + server.connections);
+    encryptor = new Encryptor(KEY, METHOD);
     stage = 0;
     headerLength = 0;
     remote = null;
@@ -83,8 +83,9 @@
     remoteAddr = null;
     remotePort = null;
     addrToSend = "";
+    aServer = getServer();
     connection.on("data", function(data) {
-      var aServer, addrtype, buf, cmd, reply, tempBuf;
+      var addrtype, buf, cmd, reply, tempBuf;
       if (stage === 5) {
         data = encryptor.encrypt(data);
         if (!remote.write(data)) {
@@ -133,7 +134,6 @@
           buf.write("\u0000\u0000\u0000\u0000", 4, 4, "binary");
           buf.writeInt16BE(remotePort, 8);
           connection.write(buf);
-          aServer = getServer();
           req = http.request({
             host: aServer,
             port: REMOTE_PORT,
@@ -157,7 +157,7 @@
             var addrToSendBuf, i, piece;
             remote = conn;
             util.log("remote got upgrade");
-            util.log("connecting " + remoteAddr + ":" + remotePort);
+            util.log("connecting " + remoteAddr + " via " + aServer);
             addrToSendBuf = new Buffer(addrToSend, "binary");
             addrToSendBuf = encryptor.encrypt(addrToSendBuf);
             remote.write(addrToSendBuf);
