@@ -2,7 +2,7 @@ language: ruby
 before_install:
   - sudo apt-get install nodejs
   - npm install coffee-script
-  - type -a cake
+  - cd shadowsocks
 script:
-  - cake build
-  - cake test
+  - ../node_modules/.bin/cake build
+  - ../node_modules/.bin/cake test
