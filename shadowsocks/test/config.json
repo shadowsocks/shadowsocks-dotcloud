@@ -1,0 +1,8 @@
+{
+    "server":["projectname-username.dotcloud.com"],
+    "local_port":1080,
+    "remote_port":8080,
+    "password":"`try*(^^$some^$%^complex>:<>?~password/",
+    "timeout":600,
+    "method":null
+}

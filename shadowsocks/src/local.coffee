@@ -50,7 +50,7 @@ configFromArgs = args.parseArgs()
 for k, v of configFromArgs
   config[k] = v
 SERVER = config.server
-REMOTE_PORT = 80
+REMOTE_PORT = config.remote_port || 80
 PORT = config.local_port
 KEY = config.password
 METHOD = config.method

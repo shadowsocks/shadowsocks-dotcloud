@@ -51,7 +51,7 @@
 
   SERVER = config.server;
 
-  REMOTE_PORT = 80;
+  REMOTE_PORT = config.remote_port || 80;
 
   PORT = config.local_port;
 
