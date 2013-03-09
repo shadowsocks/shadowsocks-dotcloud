@@ -24,6 +24,7 @@ test = (callback) ->
     print data.toString()
   coffee.on 'exit', (code) ->
     callback?() if code is 0
+    process.exit code
 
 task 'build', 'Build ./ from src/', ->
   build()
