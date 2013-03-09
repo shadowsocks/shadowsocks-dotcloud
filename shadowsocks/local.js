@@ -134,6 +134,7 @@
           buf.write("\u0000\u0000\u0000\u0000", 4, 4, "binary");
           buf.writeInt16BE(remotePort, 8);
           connection.write(buf);
+          console.log(REMOTE_PORT);
           req = http.request({
             host: aServer,
             port: REMOTE_PORT,

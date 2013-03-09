@@ -1,5 +1,5 @@
 {
-    "server":["projectname-username.dotcloud.com"],
+    "server":"localhost",
     "local_port":1080,
     "remote_port":8080,
     "password":"`try*(^^$some^$%^complex>:<>?~password/",
