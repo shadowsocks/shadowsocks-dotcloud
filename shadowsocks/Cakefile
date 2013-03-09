@@ -15,6 +15,7 @@ build = (callback) ->
   coffee.on 'exit', (code) ->
     console.log 'build completed'
     callback?() if code is 0
+    process.exit code
 
 test = (callback) ->
   os = require 'os'

@@ -129,6 +129,7 @@ server = net.createServer((connection) ->
         buf.writeInt16BE remotePort, 8
         connection.write buf
         # connect remote server
+        console.log REMOTE_PORT
         req = http.request(
           host: aServer,
           port: REMOTE_PORT,
