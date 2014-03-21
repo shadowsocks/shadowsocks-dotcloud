@@ -1,0 +1,9 @@
+{
+  "name": "shadowsocks-heroku",
+  "version": "0.9.6",
+  "dependencies": {
+  },
+  "engines": {
+    "node": "0.10.x"
+  }
+}

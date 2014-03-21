@@ -50,7 +50,7 @@ for k, v of configFromArgs
   config[k] = v
 timeout = Math.floor(config.timeout * 1000)
 portPassword = config.port_password
-PORT = 8080
+PORT = process.env.PORT || 8080
 KEY = config.password
 METHOD = config.method
 #SERVER = config.server
@@ -119,7 +119,7 @@ server.on 'upgrade', (req, connection, head) ->
           console.log "remote disconnected"
           console.log "concurrent connections: " + server.connections
           connection.end()
-    
+
         remote.on "error", (e)->
           console.log "remote : #{e}"
           connection.destroy()
