@@ -6,8 +6,8 @@ exports.parseArgs = ->
     '-k': 'password',
     '-c': 'config_file',
     '-m': 'method'
-    
-    
+
+
   result = {}
   nextIsValue = false
   lastKey = null
@@ -20,4 +20,4 @@ exports.parseArgs = ->
       nextIsValue = true
   result
 
-exports.version = "shadowsocks-dotcloud v0.9.6"
+exports.version = "shadowsocks-heroku v0.9.6"

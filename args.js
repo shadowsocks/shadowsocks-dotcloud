@@ -26,6 +26,6 @@
     return result;
   };
 
-  exports.version = "shadowsocks-dotcloud v0.9.6";
+  exports.version = "shadowsocks-heroku v0.9.6";
 
 }).call(this);

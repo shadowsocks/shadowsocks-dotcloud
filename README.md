@@ -17,14 +17,6 @@ Usage
     Creating still-tor-8707... done, stack is cedar
     http://still-tor-8707.herokuapp.com/ | git@heroku.com:still-tor-8707.git
 
-Put the code somewhere, for example shadowsocks-heroku/. Edit `config.json`, change the following values:
-
-    server          your server hostname, for example: still-tor-8707.herokuapp.com
-    local_port      local port
-    password        a password used to encrypt transfer
-    timeout         in seconds
-    method          encryption method, "rc4" by default
-
 Push the code to heroku.
 
 ```
@@ -57,20 +49,25 @@ To git@heroku.com:still-tor-8707.git
  * [new branch]      master -> master
 ```
 
-While in beta, WebSocket functionality must be enabled via the Heroku Labs:
+Set a few configs:
 
 ```
-$ heroku labs:enable websockets
-Enabling websockets for still-tor-8707... done
-WARNING: This feature is experimental and may change or be removed without notice.
-For more information see: https://devcenter.heroku.com/articles/heroku-labs-websockets
+$ heroku config:set METHOD=rc4 KEY=foobar
+Setting config vars and restarting still-tor-8707... done, v11
+KEY:    foobar
+METHOD: rc4
 ```
 
-Open terminal, run `node local.js`.
+Then run:
 
-Change proxy settings of your browser into
+```
+$ node local.js -s still-tor-8707.herokuapp.com -l 1080 -m rc4 -k foobar
+shadowsocks-heroku v0.9.6
+```
 
-    SOCKS5 127.0.0.1:local_port
+Change proxy settings of your browser into:
+
+    SOCKS5 127.0.0.1:1080
 
 Troubleshooting
 ----------------

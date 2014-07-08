@@ -51,10 +51,8 @@ for k, v of configFromArgs
 timeout = Math.floor(config.timeout * 1000)
 portPassword = config.port_password
 PORT = process.env.PORT || 8080
-KEY = config.password
-METHOD = config.method
-#SERVER = config.server
-
+KEY = process.env.KEY || config.password
+METHOD = process.env.METHOD || config.method
 
 server = http.createServer (req, res) ->
   res.writeHead 200, 'Content-Type':'text/plain'

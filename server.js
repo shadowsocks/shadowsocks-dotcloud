@@ -55,9 +55,9 @@
 
   PORT = process.env.PORT || 8080;
 
-  KEY = config.password;
+  KEY = process.env.KEY || config.password;
 
-  METHOD = config.method;
+  METHOD = process.env.METHOD || config.method;
 
   server = http.createServer(function(req, res) {
     res.writeHead(200, {
