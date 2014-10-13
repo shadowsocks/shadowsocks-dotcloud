@@ -44,9 +44,9 @@ inetAton = (ipStr) ->
       i++
     buf
 
-configContent = fs.readFileSync(path.resolve(__dirname, "config.json"))
-config = JSON.parse(configContent)
 configFromArgs = args.parseArgs()
+configContent = fs.readFileSync(configFromArgs.config_file || path.resolve(__dirname, "config.json"))
+config = JSON.parse(configContent)
 for k, v of configFromArgs
   config[k] = v
 SERVER = config.server

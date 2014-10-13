@@ -38,11 +38,11 @@
     }
   };
 
-  configContent = fs.readFileSync(path.resolve(__dirname, "config.json"));
+  configFromArgs = args.parseArgs();
+
+  configContent = fs.readFileSync(configFromArgs.config_file || path.resolve(__dirname, "config.json"));
 
   config = JSON.parse(configContent);
-
-  configFromArgs = args.parseArgs();
 
   for (k in configFromArgs) {
     v = configFromArgs[k];
