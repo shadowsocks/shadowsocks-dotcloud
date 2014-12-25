@@ -1,4 +1,3 @@
-{print} = require 'util'
 {spawn} = require 'child_process'
 
 build = (callback) ->
@@ -11,7 +10,7 @@ build = (callback) ->
   coffee.stderr.on 'data', (data) ->
     process.stderr.write data.toString()
   coffee.stdout.on 'data', (data) ->
-    print data.toString()
+    console.log data.toString()
   coffee.on 'exit', (code) ->
     console.log 'build completed'
     callback?() if code is 0
@@ -23,7 +22,7 @@ test = (callback) ->
   coffee.stderr.on 'data', (data) ->
     process.stderr.write data.toString()
   coffee.stdout.on 'data', (data) ->
-    print data.toString()
+    console.log data.toString()
   coffee.on 'exit', (code) ->
     callback?() if code is 0
     process.exit code

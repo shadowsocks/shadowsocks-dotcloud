@@ -19,7 +19,6 @@
 # SOFTWARE.
 
 crypto = require("crypto")
-util = require("util")
 merge_sort = require("./merge_sort").merge_sort
 int32Max = Math.pow(2, 32)
 
@@ -28,7 +27,7 @@ cachedTables = {} # password: [encryptTable, decryptTable]
 getTable = (key) ->
   if cachedTables[key]
     return cachedTables[key]
-  util.log "calculating ciphers"
+  console.log "calculating ciphers"
   table = new Array(256)
   decrypt_table = new Array(256)
   md5sum = crypto.createHash("md5")
@@ -55,7 +54,7 @@ getTable = (key) ->
   result = [table, decrypt_table]
   cachedTables[key] = result
   result
-  
+
 encrypt = (table, buf) ->
   i = 0
 
@@ -63,7 +62,7 @@ encrypt = (table, buf) ->
     buf[i] = table[buf[i]]
     i++
   buf
-  
+
 
 class Encryptor
   constructor: (key, @method) ->
@@ -72,20 +71,20 @@ class Encryptor
       @decipher = crypto.createDecipher @method, key
     else
       [@encryptTable, @decryptTable] = getTable(key)
-      
+
   encrypt: (buf) ->
     if @method?
       result = new Buffer(@cipher.update(buf.toString('binary')), 'binary')
       result
     else
       encrypt @encryptTable, buf
-      
+
   decrypt: (buf) ->
     if @method?
       result = new Buffer(@decipher.update(buf.toString('binary')), 'binary')
       result
     else
       encrypt @decryptTable, buf
-      
+
 exports.Encryptor = Encryptor
 exports.getTable = getTable

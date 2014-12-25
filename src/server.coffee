@@ -49,7 +49,6 @@ config = JSON.parse(configContent)
 for k, v of configFromArgs
   config[k] = v
 timeout = Math.floor(config.timeout * 1000)
-portPassword = config.port_password
 PORT = process.env.PORT || 8080
 KEY = process.env.KEY || config.password
 METHOD = process.env.METHOD || config.method
@@ -141,32 +140,33 @@ server.on 'upgrade', (req, connection, head) ->
         # may encouter index out of range
         console.warn e
         connection.destroy()
-        remote.destroy()  if remote
-    else cachedPieces.push data  if stage is 4
+        remote.destroy() if remote
+    else cachedPieces.push data if stage is 4
       # remote server not connected
       # cache received buffers
       # make sure no data is lost
 
   connection.on "end", ->
     console.log "server disconnected"
-    remote.destroy()  if remote
+    remote.destroy() if remote
     console.log "concurrent connections: " + server.connections
 
   connection.on "error", (e)->
-    console.warn "server : #{e}"
-    remote.destroy()  if remote
+    console.warn "server: #{e}"
+    remote.destroy() if remote
     console.log "concurrent connections: " + server.connections
 
   connection.on "drain", ->
-    remote.resume()  if remote
+    remote.resume() if remote
 
   connection.setTimeout timeout, ->
-    remote.destroy()  if remote
+    remote.destroy() if remote
     connection.destroy()
 
 server.listen PORT, ->
-  console.log "server listening at port " + PORT
+  address = server.address()
+  console.log "server listening at", address
 
 server.on "error", (e) ->
-  console.warn "Address in use, aborting"  if e.code is "EADDRINUSE"
+  console.warn "Address in use, aborting" if e.code is "EADDRINUSE"
   process.exit 1

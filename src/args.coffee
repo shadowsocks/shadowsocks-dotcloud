@@ -1,12 +1,13 @@
 
 exports.parseArgs = ->
   defination =
+    '-b': 'local_address'
     '-l': 'local_port'
     '-s': 'server'
+    '-r': 'remote_port'
     '-k': 'password',
     '-c': 'config_file',
     '-m': 'method'
-
 
   result = {}
   nextIsValue = false
@@ -20,4 +21,4 @@ exports.parseArgs = ->
       nextIsValue = true
   result
 
-exports.version = "shadowsocks-heroku v0.9.6"
+exports.version = "shadowsocks-heroku v0.9.7"

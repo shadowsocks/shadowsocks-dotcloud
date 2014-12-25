@@ -23,7 +23,6 @@ net = require("net")
 http = require("http")
 fs = require("fs")
 path = require("path")
-util = require('util')
 args = require('./args')
 Encryptor = require("./encrypt").Encryptor
 
@@ -49,8 +48,10 @@ configContent = fs.readFileSync(configFromArgs.config_file || path.resolve(__dir
 config = JSON.parse(configContent)
 for k, v of configFromArgs
   config[k] = v
+
 SERVER = config.server
 REMOTE_PORT = config.remote_port || 80
+LOCAL_ADDRESS = config.local_address || '127.0.0.1'
 PORT = config.local_port
 KEY = config.password
 METHOD = config.method
@@ -62,10 +63,9 @@ getServer = ->
   else
     SERVER
 
-
 server = net.createServer((connection) ->
-  util.log "local connected"
-  util.log "concurrent connections: " + server.connections
+  console.log "local connected"
+  console.log "concurrent connections:", server.connections
   encryptor = new Encryptor(KEY, METHOD)
   stage = 0
   headerLength = 0
@@ -101,14 +101,14 @@ server = net.createServer((connection) ->
         cmd = data[1]
         addrtype = data[3]
         unless cmd is 1
-          util.log "unsupported cmd: " + cmd
+          console.log "unsupported cmd:", cmd
           reply = new Buffer("\u0005\u0007\u0000\u0001", "binary")
           connection.end reply
           return
         if addrtype is 3
           addrLen = data[4]
         else unless addrtype is 1
-          util.log "unsupported addrtype: " + addrtype
+          console.log "unsupported addrtype:", addrtype
           connection.end()
           return
         addrToSend = data.slice(3, 4).toString("binary")
@@ -148,8 +148,8 @@ server = net.createServer((connection) ->
           connection.end()
         req.on 'upgrade', (res, conn, upgradeHead) ->
           remote = conn
-          util.log "remote got upgrade"
-          util.log "connecting #{remoteAddr} via #{aServer}"
+          console.log "remote got upgrade"
+          console.log "connecting #{remoteAddr} via #{aServer}"
           addrToSendBuf = new Buffer(addrToSend, "binary")
           addrToSendBuf = encryptor.encrypt addrToSendBuf
           remote.write addrToSendBuf
@@ -168,17 +168,17 @@ server = net.createServer((connection) ->
             remote.pause()  unless connection.write(data)
 
           remote.on "end", ->
-            util.log "remote disconnected"
+            console.log "remote disconnected"
             connection.end()
-            util.log "concurrent connections: " + server.connections
+            console.log "concurrent connections:", server.connections
 
           remote.on "error", (e)->
-            util.log "remote #{remoteAddr}:#{remotePort} error: #{e}"
+            console.log "remote #{remoteAddr}:#{remotePort} error: #{e}"
             if stage is 4
               connection.destroy()
               return
             connection.end()
-            util.log "concurrent connections: " + server.connections
+            console.log "concurrent connections:", server.connections
 
           remote.on "drain", ->
             connection.resume()
@@ -195,36 +195,38 @@ server = net.createServer((connection) ->
         stage = 4
       catch e
       # may encounter index out of range
-        util.log e
+        console.log e
         connection.destroy()
-        remote.destroy()  if remote
-    else cachedPieces.push data  if stage is 4
+        remote.destroy() if remote
+    else cachedPieces.push data if stage is 4
       # remote server not connected
       # cache received buffers
       # make sure no data is lost
 
   connection.on "end", ->
-    remote.destroy()  if remote
-    util.log "concurrent connections: " + server.connections
+    remote.destroy() if remote
+    console.log "concurrent connections:", server.connections
 
   connection.on "error", (e)->
-    util.log "local error: #{e}"
+    console.log "local error: #{e}"
     req.abort() if req
-    remote.destroy()  if remote
-    util.log "concurrent connections: " + server.connections
+    remote.destroy() if remote
+    console.log "concurrent connections:", server.connections
 
   connection.on "drain", ->
     # calling resume() when remote not is connected will crash node.js
-    remote.resume()  if remote and stage is 5
+    remote.resume() if remote and stage is 5
 
   connection.setTimeout timeout, ->
     req.abort() if req
-    remote.destroy()  if remote
+    remote.destroy() if remote
     connection.destroy()
 )
-server.listen PORT, ->
-  util.log "server listening at port " + PORT
+
+server.listen PORT, LOCAL_ADDRESS, ->
+  address = server.address()
+  console.log "server listening at", address
 
 server.on "error", (e) ->
-  util.log "Address in use, aborting"  if e.code is "EADDRINUSE"
+  console.log "Address in use, aborting" if e.code is "EADDRINUSE"
   process.exit 1
