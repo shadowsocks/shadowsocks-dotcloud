@@ -1,23 +1,22 @@
 shadowsocks-heroku
 ==================
 
-shadowsocks-heroku is a lightweight tunnel proxy which can help you get through
- firewalls. It is a port of [shadowsocks](https://github.com/clowwindy/shadowsocks), but
- through a different protocol.
+shadowsocks-heroku is a lightweight tunnel proxy which can help you get through firewalls. It is a port of [shadowsocks](https://github.com/clowwindy/shadowsocks), but through a different protocol.
 
-shadowsocks-heroku uses WebSockets instead of raw sockets,
- so it can be deployed on [heroku](https://www.heroku.com/).
+shadowsocks-heroku uses WebSocket instead of raw sockets, so it can be deployed on [Heroku](https://www.heroku.com/).
 
 Notice that the protocol is INCOMPATIBLE with the origin shadowsocks.
 
 Usage
 -----
 
-    $ heroku create
-    Creating still-tor-8707... done, stack is cedar
-    http://still-tor-8707.herokuapp.com/ | git@heroku.com:still-tor-8707.git
+```
+$ heroku create
+Creating still-tor-8707... done, stack is cedar
+http://still-tor-8707.herokuapp.com/ | git@heroku.com:still-tor-8707.git
+```
 
-Push the code to heroku.
+Push the code to Heroku.
 
 ```
 $ git push heroku master
@@ -30,12 +29,12 @@ Total 178 (delta 89), reused 162 (delta 78)
 
 -----> Node.js app detected
 -----> Requested node range:  0.10.x
------> Resolved node version: 0.10.26
+-----> Resolved node version: 0.10.33
 -----> Downloading and installing node
 -----> Writing a custom .npmrc to circumvent npm bugs
 -----> Exporting config vars to environment
 -----> Installing dependencies
-       npm WARN package.json shadowsocks-heroku@0.9.6 No repository field.
+       npm WARN package.json shadowsocks-heroku@0.9.7 No repository field.
 -----> Cleaning up node-gyp and npm artifacts
 -----> Building runtime environment
 -----> Discovering process types
@@ -67,11 +66,15 @@ shadowsocks-heroku v0.9.6
 
 Change proxy settings of your browser into:
 
-    SOCKS5 127.0.0.1:1080
+```
+SOCKS5 127.0.0.1:1080
+```
 
 Troubleshooting
-----------------
+---------------
 
 If there is something wrong, you can check the logs by:
 
-    $ heroku logs -t --app still-tor-8707
+```
+$ heroku logs -t --app still-tor-8707
+```

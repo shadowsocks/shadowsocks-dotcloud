@@ -73,4 +73,3 @@ server.stdout.on 'data', (data) ->
     serverReady = true
     if localReady and serverReady and not curlRunning
       runCurl()
-

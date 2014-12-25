@@ -1,7 +1,9 @@
 {
-    "server": ["still-tor-8707.herokuapp.com"],
-    "local_port": 1080,
-    "password": "`try*(^^$some^$%^complex>:<>?~password/",
-    "timeout": 600,
-    "method": "rc4"
+  "server": [
+    "still-tor-8707.herokuapp.com"
+  ],
+  "local_port": 1080,
+  "password": "`try*(^^$some^$%^complex>:<>?~password/",
+  "timeout": 600,
+  "method": "rc4"
 }
