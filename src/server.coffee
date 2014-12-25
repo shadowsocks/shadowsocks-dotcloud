@@ -22,24 +22,35 @@ net = require("net")
 fs = require("fs")
 path = require("path")
 http = require("http")
-args = require("./args")
+parseArgs = require("minimist")
 Encryptor = require("./encrypt").Encryptor
 
-console.log args.version
+options =
+  alias:
+    'r': 'remote_port'
+    'k': 'password',
+    'c': 'config_file',
+    'm': 'method'
+  string: ['password', 'method', 'config_file']
+  default:
+    'remote_port': process.env.PORT || 8080
+    'password': process.env.KEY
+    'method': process.env.METHOD
+    'config_file': path.resolve(__dirname, "config.json")
 
 inetNtoa = (buf) ->
   buf[0] + "." + buf[1] + "." + buf[2] + "." + buf[3]
 
-configFromArgs = args.parseArgs()
-configFile = configFromArgs.config_file or path.resolve(__dirname, "config.json")
+configFromArgs = parseArgs process.argv.slice(2), options
+configFile = configFromArgs.config_file
 configContent = fs.readFileSync(configFile)
 config = JSON.parse(configContent)
 for k, v of configFromArgs
   config[k] = v
 timeout = Math.floor(config.timeout * 1000)
-PORT = process.env.PORT || 8080
-KEY = process.env.KEY || config.password
-METHOD = process.env.METHOD || config.method
+PORT = config.remote_port
+KEY = config.password
+METHOD = config.method
 
 server = http.createServer (req, res) ->
   res.writeHead 200, 'Content-Type':'text/plain'

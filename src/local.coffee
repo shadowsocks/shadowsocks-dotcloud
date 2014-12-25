@@ -22,23 +22,38 @@ net = require("net")
 http = require("http")
 fs = require("fs")
 path = require("path")
-args = require('./args')
+parseArgs = require("minimist")
 Encryptor = require("./encrypt").Encryptor
 
-console.log args.version
+options =
+  alias:
+    'b': 'local_address'
+    'l': 'local_port'
+    's': 'server'
+    'r': 'remote_port'
+    'k': 'password',
+    'c': 'config_file',
+    'm': 'method'
+  string: ['local_address', 'server', 'password',
+           'config_file', 'method']
+  default:
+    'local_address': '127.0.0.1'
+    'local_port': 1080
+    'remote_port': 80
+    'config_file': path.resolve(__dirname, "config.json")
 
 inetNtoa = (buf) ->
   buf[0] + "." + buf[1] + "." + buf[2] + "." + buf[3]
 
-configFromArgs = args.parseArgs()
-configContent = fs.readFileSync(configFromArgs.config_file || path.resolve(__dirname, "config.json"))
+configFromArgs = parseArgs process.argv.slice(2), options
+configContent = fs.readFileSync(configFromArgs.config_file)
 config = JSON.parse(configContent)
 for k, v of configFromArgs
   config[k] = v
 
 SERVER = config.server
-REMOTE_PORT = config.remote_port || 80
-LOCAL_ADDRESS = config.local_address || '127.0.0.1'
+REMOTE_PORT = config.remote_port
+LOCAL_ADDRESS = config.local_address
 PORT = config.local_port
 KEY = config.password
 METHOD = config.method
