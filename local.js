@@ -72,7 +72,9 @@
   server = net.createServer(function(connection) {
     var aServer, addrLen, addrToSend, cachedPieces, encryptor, headerLength, remote, remoteAddr, remotePort, req, stage;
     console.log("local connected");
-    console.log("concurrent connections:", server.connections);
+    server.getConnections(function(err, count) {
+      console.log("concurrent connections:", count);
+    });
     encryptor = new Encryptor(KEY, METHOD);
     stage = 0;
     headerLength = 0;
@@ -134,7 +136,6 @@
           buf.write("\u0000\u0000\u0000\u0000", 4, 4, "binary");
           buf.writeInt16BE(remotePort, 8);
           connection.write(buf);
-          console.log(REMOTE_PORT);
           req = http.request({
             host: aServer,
             port: REMOTE_PORT,
@@ -180,7 +181,9 @@
             remote.on("end", function() {
               console.log("remote disconnected");
               connection.end();
-              return console.log("concurrent connections:", server.connections);
+              return server.getConnections(function(err, count) {
+                console.log("concurrent connections:", count);
+              });
             });
             remote.on("error", function(e) {
               console.log("remote " + remoteAddr + ":" + remotePort + " error: " + e);
@@ -189,7 +192,9 @@
                 return;
               }
               connection.end();
-              return console.log("concurrent connections:", server.connections);
+              return server.getConnections(function(err, count) {
+                console.log("concurrent connections:", count);
+              });
             });
             remote.on("drain", function() {
               return connection.resume();
@@ -224,7 +229,9 @@
       if (remote) {
         remote.destroy();
       }
-      return console.log("concurrent connections:", server.connections);
+      return server.getConnections(function(err, count) {
+        console.log("concurrent connections:", count);
+      });
     });
     connection.on("error", function(e) {
       console.log("local error: " + e);
@@ -234,7 +241,9 @@
       if (remote) {
         remote.destroy();
       }
-      return console.log("concurrent connections:", server.connections);
+      return server.getConnections(function(err, count) {
+        console.log("concurrent connections:", count);
+      });
     });
     connection.on("drain", function() {
       if (remote && stage === 5) {

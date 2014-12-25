@@ -25,7 +25,7 @@ http = require("http")
 args = require("./args")
 Encryptor = require("./encrypt").Encryptor
 
-console.log(args.version)
+console.log args.version
 
 inetNtoa = (buf) ->
   buf[0] + "." + buf[1] + "." + buf[2] + "." + buf[3]
@@ -63,7 +63,9 @@ server.on 'upgrade', (req, connection, head) ->
     'Connection: Upgrade\r\n' +
     '\r\n'
   console.log "server connected"
-  console.log "concurrent connections: " + server.connections
+  server.getConnections (err, count) ->
+    console.log "concurrent connections:", count
+    return
   encryptor = new Encryptor(KEY, METHOD)
   stage = 0
   headerLength = 0
@@ -75,7 +77,7 @@ server.on 'upgrade', (req, connection, head) ->
   connection.on "data", (data) ->
     data = encryptor.decrypt data
     if stage is 5
-      connection.pause()  unless remote.write(data)
+      connection.pause() unless remote.write(data)
       return
     if stage is 0
       try
@@ -98,7 +100,7 @@ server.on 'upgrade', (req, connection, head) ->
         console.log remoteAddr
         # connect remote server
         remote = net.connect(remotePort, remoteAddr, ->
-          console.log "connecting " + remoteAddr
+          console.log "connecting", remoteAddr
           i = 0
 
           while i < cachedPieces.length
@@ -110,17 +112,21 @@ server.on 'upgrade', (req, connection, head) ->
         )
         remote.on "data", (data) ->
           data = encryptor.encrypt data
-          remote.pause()  unless connection.write(data)
+          remote.pause() unless connection.write(data)
 
         remote.on "end", ->
           console.log "remote disconnected"
-          console.log "concurrent connections: " + server.connections
+          server.getConnections (err, count) ->
+            console.log "concurrent connections:", count
+            return
           connection.end()
 
         remote.on "error", (e)->
           console.log "remote : #{e}"
           connection.destroy()
-          console.log "concurrent connections: " + server.connections
+          server.getConnections (err, count) ->
+            console.log "concurrent connections:", count
+            return
 
         remote.on "drain", ->
           connection.resume()
@@ -149,12 +155,16 @@ server.on 'upgrade', (req, connection, head) ->
   connection.on "end", ->
     console.log "server disconnected"
     remote.destroy() if remote
-    console.log "concurrent connections: " + server.connections
+    server.getConnections (err, count) ->
+      console.log "concurrent connections:", count
+      return
 
   connection.on "error", (e)->
     console.warn "server: #{e}"
     remote.destroy() if remote
-    console.log "concurrent connections: " + server.connections
+    server.getConnections (err, count) ->
+      console.log "concurrent connections:", count
+      return
 
   connection.on "drain", ->
     remote.resume() if remote

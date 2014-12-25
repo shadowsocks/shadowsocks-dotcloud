@@ -18,7 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-
 net = require("net")
 http = require("http")
 fs = require("fs")
@@ -26,7 +25,7 @@ path = require("path")
 args = require('./args')
 Encryptor = require("./encrypt").Encryptor
 
-console.log(args.version)
+console.log args.version
 
 inetNtoa = (buf) ->
   buf[0] + "." + buf[1] + "." + buf[2] + "." + buf[3]
@@ -65,7 +64,9 @@ getServer = ->
 
 server = net.createServer((connection) ->
   console.log "local connected"
-  console.log "concurrent connections:", server.connections
+  server.getConnections (err, count) ->
+    console.log "concurrent connections:", count
+    return
   encryptor = new Encryptor(KEY, METHOD)
   stage = 0
   headerLength = 0
@@ -81,7 +82,7 @@ server = net.createServer((connection) ->
     if stage is 5
       # pipe sockets
       data = encryptor.encrypt data
-      connection.pause()  unless remote.write(data)
+      connection.pause() unless remote.write(data)
       return
     if stage is 0
       tempBuf = new Buffer(2)
@@ -129,7 +130,6 @@ server = net.createServer((connection) ->
         buf.writeInt16BE remotePort, 8
         connection.write buf
         # connect remote server
-        console.log REMOTE_PORT
         req = http.request(
           host: aServer,
           port: REMOTE_PORT,
@@ -165,12 +165,14 @@ server = net.createServer((connection) ->
 
           remote.on "data", (data) ->
             data = encryptor.decrypt data
-            remote.pause()  unless connection.write(data)
+            remote.pause() unless connection.write(data)
 
           remote.on "end", ->
             console.log "remote disconnected"
             connection.end()
-            console.log "concurrent connections:", server.connections
+            server.getConnections (err, count) ->
+              console.log "concurrent connections:", count
+              return
 
           remote.on "error", (e)->
             console.log "remote #{remoteAddr}:#{remotePort} error: #{e}"
@@ -178,7 +180,9 @@ server = net.createServer((connection) ->
               connection.destroy()
               return
             connection.end()
-            console.log "concurrent connections:", server.connections
+            server.getConnections (err, count) ->
+              console.log "concurrent connections:", count
+              return
 
           remote.on "drain", ->
             connection.resume()
@@ -205,13 +209,17 @@ server = net.createServer((connection) ->
 
   connection.on "end", ->
     remote.destroy() if remote
-    console.log "concurrent connections:", server.connections
+    server.getConnections (err, count) ->
+      console.log "concurrent connections:", count
+      return
 
   connection.on "error", (e)->
     console.log "local error: #{e}"
     req.abort() if req
     remote.destroy() if remote
-    console.log "concurrent connections:", server.connections
+    server.getConnections (err, count) ->
+      console.log "concurrent connections:", count
+      return
 
   connection.on "drain", ->
     # calling resume() when remote not is connected will crash node.js

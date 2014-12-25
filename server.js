@@ -68,7 +68,9 @@
     var addrLen, cachedPieces, encryptor, headerLength, remote, remoteAddr, remotePort, stage;
     connection.write('HTTP/1.1 101 Web Socket Protocol Handshake\r\n' + 'Upgrade: WebSocket\r\n' + 'Connection: Upgrade\r\n' + '\r\n');
     console.log("server connected");
-    console.log("concurrent connections: " + server.connections);
+    server.getConnections(function(err, count) {
+      console.log("concurrent connections:", count);
+    });
     encryptor = new Encryptor(KEY, METHOD);
     stage = 0;
     headerLength = 0;
@@ -108,7 +110,7 @@
           console.log(remoteAddr);
           remote = net.connect(remotePort, remoteAddr, function() {
             var i, piece;
-            console.log("connecting " + remoteAddr);
+            console.log("connecting", remoteAddr);
             i = 0;
             while (i < cachedPieces.length) {
               piece = cachedPieces[i];
@@ -126,13 +128,17 @@
           });
           remote.on("end", function() {
             console.log("remote disconnected");
-            console.log("concurrent connections: " + server.connections);
+            server.getConnections(function(err, count) {
+              console.log("concurrent connections:", count);
+            });
             return connection.end();
           });
           remote.on("error", function(e) {
             console.log("remote : " + e);
             connection.destroy();
-            return console.log("concurrent connections: " + server.connections);
+            return server.getConnections(function(err, count) {
+              console.log("concurrent connections:", count);
+            });
           });
           remote.on("drain", function() {
             return connection.resume();
@@ -167,14 +173,18 @@
       if (remote) {
         remote.destroy();
       }
-      return console.log("concurrent connections: " + server.connections);
+      return server.getConnections(function(err, count) {
+        console.log("concurrent connections:", count);
+      });
     });
     connection.on("error", function(e) {
       console.warn("server: " + e);
       if (remote) {
         remote.destroy();
       }
-      return console.log("concurrent connections: " + server.connections);
+      return server.getConnections(function(err, count) {
+        console.log("concurrent connections:", count);
+      });
     });
     connection.on("drain", function() {
       if (remote) {
