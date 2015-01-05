@@ -2,6 +2,7 @@ net = require("net")
 http = require("http")
 fs = require("fs")
 path = require("path")
+WebSocket = require('ws')
 parseArgs = require("minimist")
 Encryptor = require("./encrypt").Encryptor
 
@@ -45,7 +46,7 @@ getServer = ->
   else
     SERVER
 
-server = net.createServer((connection) ->
+server = net.createServer (connection) ->
   console.log "local connected"
   server.getConnections (err, count) ->
     console.log "concurrent connections:", count
@@ -53,10 +54,9 @@ server = net.createServer((connection) ->
   encryptor = new Encryptor(KEY, METHOD)
   stage = 0
   headerLength = 0
-  remote = null
-  req = null
   cachedPieces = []
   addrLen = 0
+  ws = null
   remoteAddr = null
   remotePort = null
   addrToSend = ""
@@ -65,7 +65,7 @@ server = net.createServer((connection) ->
     if stage is 5
       # pipe sockets
       data = encryptor.encrypt data
-      connection.pause() unless remote.write(data)
+      ws.send data, { binary: true }
       return
     if stage is 0
       tempBuf = new Buffer(2)
@@ -112,67 +112,37 @@ server = net.createServer((connection) ->
         buf.write "\u0000\u0000\u0000\u0000", 4, 4, "binary"
         buf.writeInt16BE remotePort, 8
         connection.write buf
-        # connect remote server
-        req = http.request(
-          host: aServer,
-          port: REMOTE_PORT,
-          headers:
-            'Connection': 'Upgrade',
-            'Upgrade': 'websocket'
-        )
-        req.setNoDelay true
-        req.end()
-        req.setTimeout timeout, ->
-          req.abort()
-          connection.end()
-        req.on 'error', (e)->
-          console.warn "req #{e}"
-          req.abort()
-          connection.end()
-        req.on 'upgrade', (res, conn, upgradeHead) ->
-          remote = conn
-          console.log "remote got upgrade"
+        # connect to remote server
+        ws = new WebSocket("ws://#{aServer}:#{REMOTE_PORT}/")
+        ws.on "open", ->
           console.log "connecting #{remoteAddr} via #{aServer}"
           addrToSendBuf = new Buffer(addrToSend, "binary")
           addrToSendBuf = encryptor.encrypt addrToSendBuf
-          remote.write addrToSendBuf
+          ws.send addrToSendBuf, { binary: true }
           i = 0
 
           while i < cachedPieces.length
             piece = cachedPieces[i]
             piece = encryptor.encrypt piece
-            remote.write piece
+            ws.send piece, { binary: true }
             i++
           cachedPieces = null # save memory
           stage = 5
 
-          remote.on "data", (data) ->
-            data = encryptor.decrypt data
-            remote.pause() unless connection.write(data)
+        ws.on "message", (data, flags) ->
+          data = encryptor.decrypt data
+          connection.write(data)
 
-          remote.on "end", ->
-            console.log "remote disconnected"
-            connection.end()
-            server.getConnections (err, count) ->
-              console.log "concurrent connections:", count
-              return
+        ws.on "close", ->
+          console.log "remote disconnected"
+          connection.destroy()
 
-          remote.on "error", (e)->
-            console.log "remote #{remoteAddr}:#{remotePort} error: #{e}"
-            if stage is 4
-              connection.destroy()
-              return
-            connection.end()
-            server.getConnections (err, count) ->
-              console.log "concurrent connections:", count
-              return
-
-          remote.on "drain", ->
-            connection.resume()
-
-          remote.setTimeout timeout, ->
-            connection.end()
-            remote.destroy()
+        ws.on "error", (e) ->
+          console.log "remote #{remoteAddr}:#{remotePort} error: #{e}"
+          connection.destroy()
+          server.getConnections (err, count) ->
+            console.log "concurrent connections:", count
+            return
 
         if data.length > headerLength
           buf = new Buffer(data.length - headerLength)
@@ -181,38 +151,31 @@ server = net.createServer((connection) ->
           buf = null
         stage = 4
       catch e
-      # may encounter index out of range
+        # may encounter index out of range
         console.log e
         connection.destroy()
-        remote.destroy() if remote
     else cachedPieces.push data if stage is 4
       # remote server not connected
       # cache received buffers
       # make sure no data is lost
 
   connection.on "end", ->
-    remote.destroy() if remote
+    console.log "local disconnected"
+    ws.close() if ws
     server.getConnections (err, count) ->
       console.log "concurrent connections:", count
       return
 
   connection.on "error", (e)->
     console.log "local error: #{e}"
-    req.abort() if req
-    remote.destroy() if remote
+    ws.close() if ws
     server.getConnections (err, count) ->
       console.log "concurrent connections:", count
       return
 
-  connection.on "drain", ->
-    # calling resume() when remote not is connected will crash node.js
-    remote.resume() if remote and stage is 5
-
   connection.setTimeout timeout, ->
-    req.abort() if req
-    remote.destroy() if remote
     connection.destroy()
-)
+    ws.close() if ws
 
 server.listen PORT, LOCAL_ADDRESS, ->
   address = server.address()

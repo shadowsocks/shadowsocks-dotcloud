@@ -43,7 +43,6 @@ encrypt = (table, buf) ->
     i++
   buf
 
-
 class Encryptor
   constructor: (key, @method) ->
     if @method?

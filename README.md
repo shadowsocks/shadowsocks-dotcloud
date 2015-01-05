@@ -20,26 +20,7 @@ Push the code to Heroku.
 
 ```
 $ git push heroku master
-Initializing repository, done.
-Counting objects: 178, done.
-Delta compression using up to 4 threads.
-Compressing objects: 100% (97/97), done.
-Writing objects: 100% (178/178), 47.42 KiB | 0 bytes/s, done.
-Total 178 (delta 89), reused 162 (delta 78)
-
------> Node.js app detected
------> Requested node range:  0.10.x
------> Resolved node version: 0.10.33
------> Downloading and installing node
------> Writing a custom .npmrc to circumvent npm bugs
------> Exporting config vars to environment
------> Installing dependencies
-       npm WARN package.json shadowsocks-heroku@0.9.7 No repository field.
------> Cleaning up node-gyp and npm artifacts
------> Building runtime environment
------> Discovering process types
-       Procfile declares types -> web
-
+…
 -----> Compressing... done, 5.1MB
 -----> Launching... done, v3
        http://still-tor-8707.herokuapp.com/ deployed to Heroku
@@ -55,6 +36,19 @@ $ heroku config:set METHOD=rc4 KEY=foobar
 Setting config vars and restarting still-tor-8707... done, v11
 KEY:    foobar
 METHOD: rc4
+```
+
+Install project dependencies with `npm install`:
+
+```
+$ npm install
+…
+minimist@1.1.0 node_modules/minimist
+
+ws@0.6.4 node_modules/ws
+├── options@0.0.6
+├── ultron@1.0.1
+└── nan@1.4.1
 ```
 
 Then run:

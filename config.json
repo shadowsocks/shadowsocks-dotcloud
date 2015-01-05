@@ -4,6 +4,6 @@
   ],
   "local_port": 1080,
   "password": "`try*(^^$some^$%^complex>:<>?~password/",
-  "timeout": 600,
+  "timeout": 50,
   "method": "rc4"
 }

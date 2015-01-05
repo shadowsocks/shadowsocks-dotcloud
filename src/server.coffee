@@ -2,6 +2,8 @@ net = require("net")
 fs = require("fs")
 path = require("path")
 http = require("http")
+WebSocket = require('ws')
+WebSocketServer = WebSocket.Server
 parseArgs = require("minimist")
 Encryptor = require("./encrypt").Encryptor
 
@@ -32,19 +34,11 @@ PORT = config.remote_port
 KEY = config.password
 METHOD = config.method
 
-server = http.createServer (req, res) ->
-  res.writeHead 200, 'Content-Type':'text/plain'
-  res.end 'Good Day!'
+wss = new WebSocketServer port: PORT
 
-server.on 'upgrade', (req, connection, head) ->
-  connection.write 'HTTP/1.1 101 Web Socket Protocol Handshake\r\n' +
-    'Upgrade: WebSocket\r\n' +
-    'Connection: Upgrade\r\n' +
-    '\r\n'
+wss.on "connection", (ws) ->
   console.log "server connected"
-  server.getConnections (err, count) ->
-    console.log "concurrent connections:", count
-    return
+  console.log "concurrent connections:", wss.clients.length
   encryptor = new Encryptor(KEY, METHOD)
   stage = 0
   headerLength = 0
@@ -53,10 +47,10 @@ server.on 'upgrade', (req, connection, head) ->
   addrLen = 0
   remoteAddr = null
   remotePort = null
-  connection.on "data", (data) ->
+  ws.on "message", (data, flags) ->
     data = encryptor.decrypt data
     if stage is 5
-      connection.pause() unless remote.write(data)
+      remote.write(data)
       return
     if stage is 0
       try
@@ -65,7 +59,7 @@ server.on 'upgrade', (req, connection, head) ->
           addrLen = data[1]
         else unless addrtype is 1
           console.warn "unsupported addrtype: " + addrtype
-          connection.end()
+          ws.close()
           return
         # read address and port
         if addrtype is 1
@@ -76,7 +70,7 @@ server.on 'upgrade', (req, connection, head) ->
           remoteAddr = data.slice(2, 2 + addrLen).toString("binary")
           remotePort = data.readUInt16BE(2 + addrLen)
           headerLength = 2 + addrLen + 2
-        console.log remoteAddr
+
         # connect remote server
         remote = net.connect(remotePort, remoteAddr, ->
           console.log "connecting", remoteAddr
@@ -91,28 +85,19 @@ server.on 'upgrade', (req, connection, head) ->
         )
         remote.on "data", (data) ->
           data = encryptor.encrypt data
-          remote.pause() unless connection.write(data)
+          ws.send data, { binary: true } if ws.readyState is WebSocket.OPEN
 
         remote.on "end", ->
+          ws.emit "close"
           console.log "remote disconnected"
-          server.getConnections (err, count) ->
-            console.log "concurrent connections:", count
-            return
-          connection.end()
 
         remote.on "error", (e)->
-          console.log "remote : #{e}"
-          connection.destroy()
-          server.getConnections (err, count) ->
-            console.log "concurrent connections:", count
-            return
-
-        remote.on "drain", ->
-          connection.resume()
+          ws.emit "close"
+          console.log "remote: #{e}"
 
         remote.setTimeout timeout, ->
-          connection.end()
           remote.destroy()
+          ws.close()
 
         if data.length > headerLength
           # make sure no data is lost
@@ -124,38 +109,19 @@ server.on 'upgrade', (req, connection, head) ->
       catch e
         # may encouter index out of range
         console.warn e
-        connection.destroy()
         remote.destroy() if remote
+        ws.close()
     else cachedPieces.push data if stage is 4
       # remote server not connected
       # cache received buffers
       # make sure no data is lost
 
-  connection.on "end", ->
+  ws.on "close", ->
     console.log "server disconnected"
+    console.log "concurrent connections:", wss.clients.length
     remote.destroy() if remote
-    server.getConnections (err, count) ->
-      console.log "concurrent connections:", count
-      return
 
-  connection.on "error", (e)->
+  ws.on "error", (e) ->
     console.warn "server: #{e}"
+    console.log "concurrent connections:", wss.clients.length
     remote.destroy() if remote
-    server.getConnections (err, count) ->
-      console.log "concurrent connections:", count
-      return
-
-  connection.on "drain", ->
-    remote.resume() if remote
-
-  connection.setTimeout timeout, ->
-    remote.destroy() if remote
-    connection.destroy()
-
-server.listen PORT, ->
-  address = server.address()
-  console.log "server listening at", address
-
-server.on "error", (e) ->
-  console.warn "Address in use, aborting" if e.code is "EADDRINUSE"
-  process.exit 1
