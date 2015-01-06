@@ -57,6 +57,7 @@ server = net.createServer (connection) ->
   cachedPieces = []
   addrLen = 0
   ws = null
+  ping = null
   remoteAddr = null
   remotePort = null
   addrToSend = ""
@@ -129,11 +130,17 @@ server = net.createServer (connection) ->
           cachedPieces = null # save memory
           stage = 5
 
+          ping = setInterval(->
+            ws.ping "", null, true
+          , 50)
+          return
+
         ws.on "message", (data, flags) ->
           data = encryptor.decrypt data
           connection.write(data)
 
         ws.on "close", ->
+          clearInterval ping
           console.log "remote disconnected"
           connection.destroy()
 
@@ -174,6 +181,7 @@ server = net.createServer (connection) ->
       return
 
   connection.setTimeout timeout, ->
+    console.log "local timeout"
     connection.destroy()
     ws.close() if ws
 

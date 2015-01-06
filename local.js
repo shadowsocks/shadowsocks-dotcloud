@@ -73,7 +73,7 @@
   };
 
   server = net.createServer(function(connection) {
-    var aServer, addrLen, addrToSend, cachedPieces, encryptor, headerLength, remoteAddr, remotePort, stage, ws;
+    var aServer, addrLen, addrToSend, cachedPieces, encryptor, headerLength, ping, remoteAddr, remotePort, stage, ws;
     console.log("local connected");
     server.getConnections(function(err, count) {
       console.log("concurrent connections:", count);
@@ -84,6 +84,7 @@
     cachedPieces = [];
     addrLen = 0;
     ws = null;
+    ping = null;
     remoteAddr = null;
     remotePort = null;
     addrToSend = "";
@@ -157,13 +158,17 @@
               i++;
             }
             cachedPieces = null;
-            return stage = 5;
+            stage = 5;
+            ping = setInterval(function() {
+              return ws.ping("", null, true);
+            }, 50);
           });
           ws.on("message", function(data, flags) {
             data = encryptor.decrypt(data);
             return connection.write(data);
           });
           ws.on("close", function() {
+            clearInterval(ping);
             console.log("remote disconnected");
             return connection.destroy();
           });
@@ -211,6 +216,7 @@
       });
     });
     return connection.setTimeout(timeout, function() {
+      console.log("local timeout");
       connection.destroy();
       if (ws) {
         return ws.close();

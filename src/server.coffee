@@ -96,6 +96,7 @@ wss.on "connection", (ws) ->
           console.log "remote: #{e}"
 
         remote.setTimeout timeout, ->
+          console.log "remote timeout"
           remote.destroy()
           ws.close()
 
@@ -115,6 +116,9 @@ wss.on "connection", (ws) ->
       # remote server not connected
       # cache received buffers
       # make sure no data is lost
+
+  ws.on "ping", ->
+    ws.pong '', null, true
 
   ws.on "close", ->
     console.log "server disconnected"

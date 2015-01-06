@@ -130,6 +130,7 @@
             return console.log("remote: " + e);
           });
           remote.setTimeout(timeout, function() {
+            console.log("remote timeout");
             remote.destroy();
             return ws.close();
           });
@@ -153,6 +154,9 @@
           return cachedPieces.push(data);
         }
       }
+    });
+    ws.on("ping", function() {
+      return ws.pong('', null, true);
     });
     ws.on("close", function() {
       console.log("server disconnected");
