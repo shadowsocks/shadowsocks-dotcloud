@@ -132,7 +132,7 @@ server = net.createServer (connection) ->
 
           ping = setInterval(->
             ws.ping "", null, true
-          , 50)
+          , 50 * 1000)
           return
 
         ws.on "message", (data, flags) ->

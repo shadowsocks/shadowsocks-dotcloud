@@ -161,7 +161,7 @@
             stage = 5;
             ping = setInterval(function() {
               return ws.ping("", null, true);
-            }, 50);
+            }, 50 * 1000);
           });
           ws.on("message", function(data, flags) {
             data = encryptor.decrypt(data);
