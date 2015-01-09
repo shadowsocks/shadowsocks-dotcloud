@@ -33,9 +33,6 @@
     },
     string: ['password', 'method', 'config_file'],
     "default": {
-      'remote_port': process.env.PORT || 8080,
-      'password': process.env.KEY,
-      'method': process.env.METHOD,
       'config_file': path.resolve(__dirname, "config.json")
     }
   };
@@ -51,6 +48,18 @@
   configContent = fs.readFileSync(configFile);
 
   config = JSON.parse(configContent);
+
+  if (process.env.PORT) {
+    config['remote_port'] = +process.env.PORT;
+  }
+
+  if (process.env.KEY) {
+    config['password'] = process.env.KEY;
+  }
+
+  if (process.env.METHOD) {
+    config['method'] = process.env.METHOD;
+  }
 
   for (k in configFromArgs) {
     v = configFromArgs[k];
@@ -178,6 +187,18 @@
         return remote.destroy();
       }
     });
+  });
+
+  wss.on("listening", function(address) {
+    address = wss._server.address();
+    return console.log("server listening at", address);
+  });
+
+  wss.on("error", function(e) {
+    if (e.code === "EADDRINUSE") {
+      console.log("address in use, aborting");
+    }
+    return process.exit(1);
   });
 
 }).call(this);

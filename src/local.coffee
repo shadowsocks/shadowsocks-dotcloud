@@ -18,9 +18,6 @@ options =
   string: ['local_address', 'server', 'password',
            'config_file', 'method']
   default:
-    'local_address': '127.0.0.1'
-    'local_port': 1080
-    'remote_port': 80
     'config_file': path.resolve(__dirname, "config.json")
 
 inetNtoa = (buf) ->
@@ -190,5 +187,5 @@ server.listen PORT, LOCAL_ADDRESS, ->
   console.log "server listening at", address
 
 server.on "error", (e) ->
-  console.log "Address in use, aborting" if e.code is "EADDRINUSE"
+  console.log "address in use, aborting" if e.code is "EADDRINUSE"
   process.exit 1

@@ -28,9 +28,6 @@
     },
     string: ['local_address', 'server', 'password', 'config_file', 'method'],
     "default": {
-      'local_address': '127.0.0.1',
-      'local_port': 1080,
-      'remote_port': 80,
       'config_file': path.resolve(__dirname, "config.json")
     }
   };
@@ -232,7 +229,7 @@
 
   server.on("error", function(e) {
     if (e.code === "EADDRINUSE") {
-      console.log("Address in use, aborting");
+      console.log("address in use, aborting");
     }
     return process.exit(1);
   });

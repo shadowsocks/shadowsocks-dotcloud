@@ -19,9 +19,6 @@ options =
     'm': 'method'
   string: ['password', 'method', 'config_file']
   default:
-    'remote_port': process.env.PORT || 8080
-    'password': process.env.KEY
-    'method': process.env.METHOD
     'config_file': path.resolve(__dirname, "config.json")
 
 inetNtoa = (buf) ->
@@ -31,8 +28,14 @@ configFromArgs = parseArgs process.argv.slice(2), options
 configFile = configFromArgs.config_file
 configContent = fs.readFileSync(configFile)
 config = JSON.parse(configContent)
+
+config['remote_port'] = +process.env.PORT if process.env.PORT
+config['password'] = process.env.KEY if process.env.KEY
+config['method'] = process.env.METHOD if process.env.METHOD
+
 for k, v of configFromArgs
   config[k] = v
+
 timeout = Math.floor(config.timeout * 1000)
 PORT = config.remote_port
 KEY = config.password
@@ -133,3 +136,11 @@ wss.on "connection", (ws) ->
     console.warn "server: #{e}"
     console.log "concurrent connections:", wss.clients.length
     remote.destroy() if remote
+
+wss.on "listening", (address) ->
+  address = wss._server.address()
+  console.log "server listening at", address
+
+wss.on "error", (e) ->
+  console.log "address in use, aborting" if e.code is "EADDRINUSE"
+  process.exit 1
