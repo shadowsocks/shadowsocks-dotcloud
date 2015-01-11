@@ -57,7 +57,7 @@ wss.on "connection", (ws) ->
   ws.on "message", (data, flags) ->
     data = encryptor.decrypt data
     if stage is 5
-      remote.write(data)
+      ws._socket.pause() unless remote.write(data)
       return
     if stage is 0
       try
@@ -92,14 +92,20 @@ wss.on "connection", (ws) ->
         )
         remote.on "data", (data) ->
           data = encryptor.encrypt data
-          ws.send data, { binary: true } if ws.readyState is WebSocket.OPEN
+          if ws.readyState is WebSocket.OPEN
+            ws.send data, { binary: true }
+            remote.pause() if ws.bufferedAmount > 0
+          return
 
         remote.on "end", ->
-          ws.emit "close"
+          ws.close()
           console.log "remote disconnected"
 
+        remote.on "drain", ->
+          ws._socket.resume()
+
         remote.on "error", (e)->
-          ws.emit "close"
+          ws.terminate()
           console.log "remote: #{e}"
 
         remote.setTimeout timeout, ->
@@ -126,6 +132,9 @@ wss.on "connection", (ws) ->
 
   ws.on "ping", ->
     ws.pong '', null, true
+
+  ws._socket.on "drain", ->
+    remote.resume() if stage is 5
 
   ws.on "close", ->
     console.log "server disconnected"

@@ -90,9 +90,14 @@
       var addrtype, buf, cmd, e, reply, tempBuf;
       if (stage === 5) {
         data = encryptor.encrypt(data);
-        ws.send(data, {
-          binary: true
-        });
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(data, {
+            binary: true
+          });
+          if (ws.bufferedAmount > 0) {
+            connection.pause();
+          }
+        }
         return;
       }
       if (stage === 0) {
@@ -159,10 +164,15 @@
             ping = setInterval(function() {
               return ws.ping("", null, true);
             }, 50 * 1000);
+            ws._socket.on("drain", function() {
+              return connection.resume();
+            });
           });
           ws.on("message", function(data, flags) {
             data = encryptor.decrypt(data);
-            return connection.write(data);
+            if (!connection.write(data)) {
+              return ws._socket.pause();
+            }
           });
           ws.on("close", function() {
             clearInterval(ping);
@@ -197,7 +207,7 @@
     connection.on("end", function() {
       console.log("local disconnected");
       if (ws) {
-        ws.close();
+        ws.terminate();
       }
       return server.getConnections(function(err, count) {
         console.log("concurrent connections:", count);
@@ -206,17 +216,20 @@
     connection.on("error", function(e) {
       console.log("local error: " + e);
       if (ws) {
-        ws.close();
+        ws.terminate();
       }
       return server.getConnections(function(err, count) {
         console.log("concurrent connections:", count);
       });
     });
+    connection.on("drain", function() {
+      return ws._socket.resume();
+    });
     return connection.setTimeout(timeout, function() {
       console.log("local timeout");
       connection.destroy();
       if (ws) {
-        return ws.close();
+        return ws.terminate();
       }
     });
   });

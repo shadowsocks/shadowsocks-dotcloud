@@ -63,7 +63,9 @@ server = net.createServer (connection) ->
     if stage is 5
       # pipe sockets
       data = encryptor.encrypt data
-      ws.send data, { binary: true }
+      if ws.readyState is WebSocket.OPEN
+        ws.send data, { binary: true }
+        connection.pause() if ws.bufferedAmount > 0
       return
     if stage is 0
       tempBuf = new Buffer(2)
@@ -130,11 +132,15 @@ server = net.createServer (connection) ->
           ping = setInterval(->
             ws.ping "", null, true
           , 50 * 1000)
+
+          ws._socket.on "drain", ->
+            connection.resume()
+
           return
 
         ws.on "message", (data, flags) ->
           data = encryptor.decrypt data
-          connection.write(data)
+          ws._socket.pause() unless connection.write(data)
 
         ws.on "close", ->
           clearInterval ping
@@ -165,22 +171,25 @@ server = net.createServer (connection) ->
 
   connection.on "end", ->
     console.log "local disconnected"
-    ws.close() if ws
+    ws.terminate() if ws
     server.getConnections (err, count) ->
       console.log "concurrent connections:", count
       return
 
   connection.on "error", (e)->
     console.log "local error: #{e}"
-    ws.close() if ws
+    ws.terminate() if ws
     server.getConnections (err, count) ->
       console.log "concurrent connections:", count
       return
 
+  connection.on "drain", ->
+    ws._socket.resume()
+
   connection.setTimeout timeout, ->
     console.log "local timeout"
     connection.destroy()
-    ws.close() if ws
+    ws.terminate() if ws
 
 server.listen PORT, LOCAL_ADDRESS, ->
   address = server.address()

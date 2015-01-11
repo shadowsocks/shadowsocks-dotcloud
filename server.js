@@ -94,7 +94,9 @@
       var addrtype, buf, e;
       data = encryptor.decrypt(data);
       if (stage === 5) {
-        remote.write(data);
+        if (!remote.write(data)) {
+          ws._socket.pause();
+        }
         return;
       }
       if (stage === 0) {
@@ -131,17 +133,23 @@
           remote.on("data", function(data) {
             data = encryptor.encrypt(data);
             if (ws.readyState === WebSocket.OPEN) {
-              return ws.send(data, {
+              ws.send(data, {
                 binary: true
               });
+              if (ws.bufferedAmount > 0) {
+                remote.pause();
+              }
             }
           });
           remote.on("end", function() {
-            ws.emit("close");
+            ws.close();
             return console.log("remote disconnected");
           });
+          remote.on("drain", function() {
+            return ws._socket.resume();
+          });
           remote.on("error", function(e) {
-            ws.emit("close");
+            ws.terminate();
             return console.log("remote: " + e);
           });
           remote.setTimeout(timeout, function() {
@@ -172,6 +180,11 @@
     });
     ws.on("ping", function() {
       return ws.pong('', null, true);
+    });
+    ws._socket.on("drain", function() {
+      if (stage === 5) {
+        return remote.resume();
+      }
     });
     ws.on("close", function() {
       console.log("server disconnected");
