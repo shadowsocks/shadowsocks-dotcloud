@@ -37,6 +37,9 @@ PORT = config.remote_port
 KEY = config.password
 METHOD = config.method
 
+if METHOD.toLowerCase() in ["", "null", "table"]
+  METHOD = null
+
 wss = new WebSocketServer port: PORT
 
 wss.on "connection", (ws) ->

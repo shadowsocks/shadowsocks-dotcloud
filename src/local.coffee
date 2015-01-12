@@ -37,6 +37,9 @@ KEY = config.password
 METHOD = config.method
 timeout = Math.floor(config.timeout * 1000)
 
+if METHOD.toLowerCase() in ["", "null", "table"]
+  METHOD = null
+
 getServer = ->
   if SERVER instanceof Array
     SERVER[Math.floor(Math.random() * SERVER.length)]
