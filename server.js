@@ -2,12 +2,6 @@
 (function() {
   var Encryptor, KEY, METHOD, PORT, WebSocket, WebSocketServer, config, configContent, configFile, configFromArgs, fs, http, inetNtoa, k, net, options, parseArgs, path, timeout, v, wss;
 
-  if (process.env.NODETIME_ACCOUNT_KEY) {
-    require("nodetime").profile({
-      accountKey: process.env.NODETIME_ACCOUNT_KEY
-    });
-  }
-
   net = require("net");
 
   fs = require("fs");

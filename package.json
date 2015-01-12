@@ -3,7 +3,6 @@
   "version": "0.9.8",
   "dependencies": {
     "minimist": "^1.1.0",
-    "nodetime": "^0.8.15",
     "ws": "^0.6.3"
   },
   "engines": {
