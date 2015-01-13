@@ -1,4 +1,5 @@
 net = require("net")
+url = require("url")
 http = require("http")
 fs = require("fs")
 path = require("path")
@@ -16,7 +17,7 @@ options =
     'c': 'config_file',
     'm': 'method'
   string: ['local_address', 'server', 'password',
-           'config_file', 'method']
+           'config_file', 'method', 'scheme']
   default:
     'config_file': path.resolve(__dirname, "config.json")
 
@@ -29,6 +30,7 @@ config = JSON.parse(configContent)
 for k, v of configFromArgs
   config[k] = v
 
+SCHEME = config.scheme
 SERVER = config.server
 REMOTE_PORT = config.remote_port
 LOCAL_ADDRESS = config.local_address
@@ -39,6 +41,21 @@ timeout = Math.floor(config.timeout * 1000)
 
 if METHOD.toLowerCase() in ["", "null", "table"]
   METHOD = null
+
+prepareServer = (address) ->
+  serverUrl = url.parse address
+  serverUrl.slashes = true
+  serverUrl.protocol ?= SCHEME
+  if serverUrl.hostname is null
+    serverUrl.hostname = address
+    serverUrl.pathname = '/'
+  serverUrl.port ?= REMOTE_PORT
+  url.format(serverUrl)
+
+if SERVER instanceof Array
+  SERVER = (prepareServer(s) for s in SERVER)
+else
+  SERVER = prepareServer(SERVER)
 
 getServer = ->
   if SERVER instanceof Array
@@ -121,7 +138,7 @@ server = net.createServer (connection) ->
         buf.writeInt16BE remotePort, 8
         connection.write buf
         # connect to remote server
-        ws = new WebSocket("ws://#{aServer}:#{REMOTE_PORT}/")
+        ws = new WebSocket(aServer)
         ws.on "open", ->
           console.log "connecting #{remoteAddr} via #{aServer}"
           addrToSendBuf = new Buffer(addrToSend, "binary")
