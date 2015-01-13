@@ -26,6 +26,10 @@ configFile = configFromArgs.config_file
 configContent = fs.readFileSync(configFile)
 config = JSON.parse(configContent)
 
+# OpenShift
+config['local_address'] = process.env.OPENSHIFT_NODEJS_IP if process.env.OPENSHIFT_NODEJS_IP
+config['remote_port'] = +process.env.OPENSHIFT_NODEJS_PORT if process.env.OPENSHIFT_NODEJS_PORT
+# Heroku
 config['remote_port'] = +process.env.PORT if process.env.PORT
 config['password'] = process.env.KEY if process.env.KEY
 config['method'] = process.env.METHOD if process.env.METHOD
