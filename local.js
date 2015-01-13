@@ -73,6 +73,12 @@
     }
   };
 
+  setInterval(function() {
+    if (global.gc) {
+      return gc();
+    }
+  }, 1000);
+
   server = net.createServer(function(connection) {
     var aServer, addrLen, addrToSend, cachedPieces, encryptor, headerLength, ping, remoteAddr, remotePort, stage, ws;
     console.log("local connected");

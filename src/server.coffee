@@ -40,6 +40,11 @@ METHOD = config.method
 if METHOD.toLowerCase() in ["", "null", "table"]
   METHOD = null
 
+setInterval(->
+  if global.gc
+    gc()
+, 1000)
+
 wss = new WebSocketServer port: PORT
 
 wss.on "connection", (ws) ->

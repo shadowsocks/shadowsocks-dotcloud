@@ -72,6 +72,12 @@
     METHOD = null;
   }
 
+  setInterval(function() {
+    if (global.gc) {
+      return gc();
+    }
+  }, 1000);
+
   wss = new WebSocketServer({
     port: PORT
   });
