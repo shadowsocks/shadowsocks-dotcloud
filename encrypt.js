@@ -68,20 +68,16 @@
     }
 
     Encryptor.prototype.encrypt = function(buf) {
-      var result;
       if (this.method != null) {
-        result = new Buffer(this.cipher.update(buf.toString('binary')), 'binary');
-        return result;
+        return this.cipher.update(buf);
       } else {
         return encrypt(this.encryptTable, buf);
       }
     };
 
     Encryptor.prototype.decrypt = function(buf) {
-      var result;
       if (this.method != null) {
-        result = new Buffer(this.decipher.update(buf.toString('binary')), 'binary');
-        return result;
+        return this.decipher.update(buf);
       } else {
         return encrypt(this.decryptTable, buf);
       }

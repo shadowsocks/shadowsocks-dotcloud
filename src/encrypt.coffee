@@ -53,15 +53,13 @@ class Encryptor
 
   encrypt: (buf) ->
     if @method?
-      result = new Buffer(@cipher.update(buf.toString('binary')), 'binary')
-      result
+      @cipher.update(buf)
     else
       encrypt @encryptTable, buf
 
   decrypt: (buf) ->
     if @method?
-      result = new Buffer(@decipher.update(buf.toString('binary')), 'binary')
-      result
+      @decipher.update(buf)
     else
       encrypt @decryptTable, buf
 
