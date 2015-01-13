@@ -9,11 +9,12 @@ Encryptor = require("./encrypt").Encryptor
 
 options =
   alias:
+    'b': 'local_address'
     'r': 'remote_port'
     'k': 'password',
     'c': 'config_file',
     'm': 'method'
-  string: ['password', 'method', 'config_file']
+  string: ['local_address', 'password', 'method', 'config_file']
   default:
     'config_file': path.resolve(__dirname, "config.json")
 
@@ -33,6 +34,7 @@ for k, v of configFromArgs
   config[k] = v
 
 timeout = Math.floor(config.timeout * 1000)
+LOCAL_ADDRESS = config.local_address
 PORT = config.remote_port
 KEY = config.password
 METHOD = config.method
@@ -45,7 +47,11 @@ setInterval(->
     gc()
 , 1000)
 
-wss = new WebSocketServer port: PORT
+server = http.createServer (req, res) ->
+  res.writeHead 200, 'Content-Type': 'text/plain'
+  res.end("asdf.")
+
+wss = new WebSocketServer server: server
 
 wss.on "connection", (ws) ->
   console.log "server connected"
@@ -150,10 +156,10 @@ wss.on "connection", (ws) ->
     console.log "concurrent connections:", wss.clients.length
     remote.destroy() if remote
 
-wss.on "listening", (address) ->
-  address = wss._server.address()
+server.listen PORT, LOCAL_ADDRESS, ->
+  address = server.address()
   console.log "server listening at", address
 
-wss.on "error", (e) ->
+server.on "error", (e) ->
   console.log "address in use, aborting" if e.code is "EADDRINUSE"
   process.exit 1

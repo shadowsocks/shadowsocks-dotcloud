@@ -1,1 +1,1 @@
-web: node --expose-gc server.js
+web: node --expose-gc server.js -b 0.0.0.0
