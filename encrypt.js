@@ -59,27 +59,33 @@
     function Encryptor(key, method) {
       var _ref;
       this.method = method;
-      if (this.method != null) {
+      if (this.method === null) {
+        return;
+      } else if (this.method === "table") {
+        _ref = getTable(key), this.encryptTable = _ref[0], this.decryptTable = _ref[1];
+      } else {
         this.cipher = crypto.createCipher(this.method, key);
         this.decipher = crypto.createDecipher(this.method, key);
-      } else {
-        _ref = getTable(key), this.encryptTable = _ref[0], this.decryptTable = _ref[1];
       }
     }
 
     Encryptor.prototype.encrypt = function(buf) {
-      if (this.method != null) {
-        return this.cipher.update(buf);
-      } else {
+      if (this.method === null) {
+        return buf;
+      } else if (this.method === "table") {
         return encrypt(this.encryptTable, buf);
+      } else {
+        return this.cipher.update(buf);
       }
     };
 
     Encryptor.prototype.decrypt = function(buf) {
-      if (this.method != null) {
-        return this.decipher.update(buf);
-      } else {
+      if (this.method === null) {
+        return buf;
+      } else if (this.method === "table") {
         return encrypt(this.decryptTable, buf);
+      } else {
+        return this.decipher.update(buf);
       }
     };
 

@@ -79,7 +79,7 @@
 
   METHOD = config.method;
 
-  if ((_ref = METHOD.toLowerCase()) === "" || _ref === "null" || _ref === "table") {
+  if ((METHOD != null) && ((_ref = METHOD.toLowerCase()) === "" || _ref === "null")) {
     METHOD = null;
   }
 
