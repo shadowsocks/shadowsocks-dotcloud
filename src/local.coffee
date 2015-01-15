@@ -138,7 +138,7 @@ server = net.createServer (connection) ->
         buf.writeInt16BE remotePort, 8
         connection.write buf
         # connect to remote server
-        ws = new WebSocket(aServer)
+        ws = new WebSocket aServer, protocol: "binary, base64"
         ws.on "open", ->
           console.log "connecting #{remoteAddr} via #{aServer}"
           addrToSendBuf = new Buffer(addrToSend, "binary")
@@ -209,7 +209,7 @@ server = net.createServer (connection) ->
       return
 
   connection.on "drain", ->
-    ws._socket.resume()
+    ws._socket.resume() if ws and ws._socket
 
   connection.setTimeout timeout, ->
     console.log "local timeout"

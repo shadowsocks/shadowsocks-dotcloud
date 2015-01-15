@@ -186,7 +186,9 @@
           buf.write("\u0000\u0000\u0000\u0000", 4, 4, "binary");
           buf.writeInt16BE(remotePort, 8);
           connection.write(buf);
-          ws = new WebSocket(aServer);
+          ws = new WebSocket(aServer, {
+            protocol: "binary, base64"
+          });
           ws.on("open", function() {
             var addrToSendBuf, i, piece;
             console.log("connecting " + remoteAddr + " via " + aServer);
@@ -268,7 +270,9 @@
       });
     });
     connection.on("drain", function() {
-      return ws._socket.resume();
+      if (ws && ws._socket) {
+        return ws._socket.resume();
+      }
     });
     return connection.setTimeout(timeout, function() {
       console.log("local timeout");
