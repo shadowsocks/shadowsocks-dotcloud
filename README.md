@@ -169,3 +169,35 @@ If there is something wrong, you can check the logs by:
 ```
 $ rhc tail -a asdfasdf
 ```
+
+Supported Ciphers
+-----------------
+
+- rc4
+- null
+- table
+- bf-cfb
+- rc2-cfb
+- des-cfb
+- idea-cfb
+- seed-cfb
+- cast5-cfb
+- aes-256-cfb
+- aes-128-cfb
+- aes-192-cfb
+- aes-256-ofb
+- aes-128-ofb
+- aes-192-ofb
+- aes-128-ctr
+- aes-192-ctr
+- aes-256-ctr
+- salsa20-ctr
+- aes-128-cfb8
+- aes-192-cfb8
+- aes-256-cfb8
+- aes-128-cfb1
+- aes-192-cfb1
+- aes-256-cfb1
+- camellia-128-cfb
+- camellia-192-cfb
+- camellia-256-cfb
