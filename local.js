@@ -187,7 +187,7 @@
           buf.writeInt16BE(remotePort, 8);
           connection.write(buf);
           ws = new WebSocket(aServer, {
-            protocol: "binary, base64"
+            protocol: "binary"
           });
           ws.on("open", function() {
             var addrToSendBuf, i, piece;

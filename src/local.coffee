@@ -138,7 +138,7 @@ server = net.createServer (connection) ->
         buf.writeInt16BE remotePort, 8
         connection.write buf
         # connect to remote server
-        ws = new WebSocket aServer, protocol: "binary, base64"
+        ws = new WebSocket aServer, protocol: "binary"
         ws.on "open", ->
           console.log "connecting #{remoteAddr} via #{aServer}"
           addrToSendBuf = new Buffer(addrToSend, "binary")
