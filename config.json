@@ -6,5 +6,5 @@
   "remote_port": 8080,
   "password": "`try*(^^$some^$%^complex>:<>?~password/",
   "timeout": 600,
-  "method": "rc4"
+  "method": "rc4-md5"
 }
