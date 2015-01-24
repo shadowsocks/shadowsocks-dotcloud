@@ -174,7 +174,6 @@ Supported Ciphers
 -----------------
 
 - rc4
-- null
 - table
 - bf-cfb
 - rc2-cfb

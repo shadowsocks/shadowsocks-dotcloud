@@ -43,7 +43,7 @@ PORT = config.remote_port
 KEY = config.password
 METHOD = config.method
 
-if METHOD? and (METHOD.toLowerCase() in ["", "null"])
+if METHOD.toLowerCase() in ["", "null", "table"]
   METHOD = null
 
 setInterval(->

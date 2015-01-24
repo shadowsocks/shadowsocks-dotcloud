@@ -65,7 +65,7 @@
 
   timeout = Math.floor(config.timeout * 1000);
 
-  if ((METHOD != null) && ((_ref = METHOD.toLowerCase()) === "" || _ref === "null")) {
+  if ((_ref = METHOD.toLowerCase()) === "" || _ref === "null" || _ref === "table") {
     METHOD = null;
   }
 

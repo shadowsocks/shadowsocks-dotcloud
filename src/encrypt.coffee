@@ -45,29 +45,23 @@ encrypt = (table, buf) ->
 
 class Encryptor
   constructor: (key, @method) ->
-    if @method is null
-      return
-    else if @method == "table"
-      [@encryptTable, @decryptTable] = getTable(key)
-    else
+    if @method?
       @cipher = crypto.createCipher @method, key
       @decipher = crypto.createDecipher @method, key
+    else
+      [@encryptTable, @decryptTable] = getTable(key)
 
   encrypt: (buf) ->
-    if @method is null
-      buf
-    else if @method == "table"
-      encrypt @encryptTable, buf
-    else
+    if @method?
       @cipher.update(buf)
+    else
+      encrypt @encryptTable, buf
 
   decrypt: (buf) ->
-    if @method is null
-      buf
-    else if @method == "table"
-      encrypt @decryptTable, buf
-    else
+    if @method?
       @decipher.update(buf)
+    else
+      encrypt @decryptTable, buf
 
 exports.Encryptor = Encryptor
 exports.getTable = getTable

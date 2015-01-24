@@ -39,7 +39,7 @@ KEY = config.password
 METHOD = config.method
 timeout = Math.floor(config.timeout * 1000)
 
-if METHOD? and (METHOD.toLowerCase() in ["", "null"])
+if METHOD.toLowerCase() in ["", "null", "table"]
   METHOD = null
 
 prepareServer = (address) ->
