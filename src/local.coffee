@@ -140,6 +140,13 @@ server = net.createServer (connection) ->
         # connect to remote server
         ws = new WebSocket aServer, protocol: "binary"
         ws.on "open", ->
+          ws._socket.on "error", (e) ->
+            console.log "remote #{remoteAddr}:#{remotePort} #{e}"
+            connection.destroy()
+            server.getConnections (err, count) ->
+              console.log "concurrent connections:", count
+              return
+
           console.log "connecting #{remoteAddr} via #{aServer}"
           addrToSendBuf = new Buffer(addrToSend, "binary")
           addrToSendBuf = encryptor.encrypt addrToSendBuf

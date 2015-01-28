@@ -191,6 +191,13 @@
           });
           ws.on("open", function() {
             var addrToSendBuf, i, piece;
+            ws._socket.on("error", function(e) {
+              console.log("remote " + remoteAddr + ":" + remotePort + " " + e);
+              connection.destroy();
+              return server.getConnections(function(err, count) {
+                console.log("concurrent connections:", count);
+              });
+            });
             console.log("connecting " + remoteAddr + " via " + aServer);
             addrToSendBuf = new Buffer(addrToSend, "binary");
             addrToSendBuf = encryptor.encrypt(addrToSendBuf);
