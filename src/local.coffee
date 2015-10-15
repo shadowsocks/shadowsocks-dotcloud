@@ -63,11 +63,6 @@ getServer = ->
   else
     SERVER
 
-setInterval(->
-  if global.gc
-    gc()
-, 1000)
-
 server = net.createServer (connection) ->
   console.log "local connected"
   server.getConnections (err, count) ->

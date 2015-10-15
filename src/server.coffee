@@ -46,11 +46,6 @@ METHOD = config.method
 if METHOD.toLowerCase() in ["", "null", "table"]
   METHOD = null
 
-setInterval(->
-  if global.gc
-    gc()
-, 1000)
-
 server = http.createServer (req, res) ->
   res.writeHead 200, 'Content-Type': 'text/plain'
   res.end("asdf.")

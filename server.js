@@ -83,12 +83,6 @@
     METHOD = null;
   }
 
-  setInterval(function() {
-    if (global.gc) {
-      return gc();
-    }
-  }, 1000);
-
   server = http.createServer(function(req, res) {
     res.writeHead(200, {
       'Content-Type': 'text/plain'
