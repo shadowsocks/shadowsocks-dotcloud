@@ -1,13 +1,14 @@
 {
   "name": "shadowsocks-heroku",
-  "version": "0.9.9",
+  "version": "0.9.10",
   "dependencies": {
-    "minimist": "^1.1.0",
-    "ws": "^0.6.5"
+    "minimist": "^1.2.0",
+    "ws": "^0.8.0"
   },
   "engines": {
-    "node": "0.10.x",
-    "npm": ">= 1.0.0"
+    "node": "4.x"
   },
-  "main": "--expose-gc server.js"
+  "scripts": {
+    "start": "node server.js -b 0.0.0.0"
+  }
 }
