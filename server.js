@@ -44,14 +44,6 @@
 
   config = JSON.parse(configContent);
 
-  if (process.env.OPENSHIFT_NODEJS_IP) {
-    config['local_address'] = process.env.OPENSHIFT_NODEJS_IP;
-  }
-
-  if (process.env.OPENSHIFT_NODEJS_PORT) {
-    config['remote_port'] = +process.env.OPENSHIFT_NODEJS_PORT;
-  }
-
   if (process.env.PORT) {
     config['remote_port'] = +process.env.PORT;
   }
