@@ -1,31 +1,37 @@
-const net = require("net");
-const url = require("url");
-const http = require("http");
-const fs = require("fs");
-const path = require("path");
+const net = require('net');
+const url = require('url');
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
 const WebSocket = require('ws');
-const parseArgs = require("minimist");
+const parseArgs = require('minimist');
 const HttpsProxyAgent = require('https-proxy-agent');
-const { Encryptor } = require("./encrypt");
+const { Encryptor } = require('./encrypt');
 
 const options = {
   alias: {
-    'b': 'local_address',
-    'l': 'local_port',
-    's': 'server',
-    'r': 'remote_port',
-    'k': 'password',
-    'c': 'config_file',
-    'm': 'method'
+    b: 'local_address',
+    l: 'local_port',
+    s: 'server',
+    r: 'remote_port',
+    k: 'password',
+    c: 'config_file',
+    m: 'method'
   },
-  string: ['local_address', 'server', 'password',
-           'config_file', 'method', 'scheme'],
+  string: [
+    'local_address',
+    'server',
+    'password',
+    'config_file',
+    'method',
+    'scheme'
+  ],
   default: {
-    'config_file': path.resolve(__dirname, "config.json")
+    config_file: path.resolve(__dirname, 'config.json')
   }
 };
 
-const inetNtoa = buf => buf[0] + "." + buf[1] + "." + buf[2] + "." + buf[3];
+const inetNtoa = buf => buf[0] + '.' + buf[1] + '.' + buf[2] + '.' + buf[3];
 
 const configFromArgs = parseArgs(process.argv.slice(2), options);
 const configContent = fs.readFileSync(configFromArgs.config_file);
@@ -44,25 +50,29 @@ const KEY = config.password;
 let METHOD = config.method;
 const timeout = Math.floor(config.timeout * 1000);
 
-if (["", "null", "table"].includes(METHOD.toLowerCase())) {
+if (['', 'null', 'table'].includes(METHOD.toLowerCase())) {
   METHOD = null;
 }
 
 const HTTPPROXY = process.env.http_proxy;
 
 if (HTTPPROXY) {
-  console.log("http proxy:", HTTPPROXY);
+  console.log('http proxy:', HTTPPROXY);
 }
 
 const prepareServer = function(address) {
   const serverUrl = url.parse(address);
   serverUrl.slashes = true;
-  if (!serverUrl.protocol) { serverUrl.protocol = SCHEME; }
+  if (!serverUrl.protocol) {
+    serverUrl.protocol = SCHEME;
+  }
   if (!serverUrl.hostname) {
     serverUrl.hostname = address;
     serverUrl.pathname = '/';
   }
-  if (!serverUrl.port) { serverUrl.port = REMOTE_PORT; }
+  if (!serverUrl.port) {
+    serverUrl.port = REMOTE_PORT;
+  }
   return url.format(serverUrl);
 };
 
@@ -81,9 +91,9 @@ const getServer = function() {
 };
 
 var server = net.createServer(function(connection) {
-  console.log("local connected");
+  console.log('local connected');
   server.getConnections(function(err, count) {
-    console.log("concurrent connections:", count);
+    console.log('concurrent connections:', count);
   });
   const encryptor = new Encryptor(KEY, METHOD);
   let stage = 0;
@@ -94,21 +104,23 @@ var server = net.createServer(function(connection) {
   let ping = null;
   let remoteAddr = null;
   let remotePort = null;
-  let addrToSend = "";
+  let addrToSend = '';
   const aServer = getServer();
-  connection.on("data", function(data) {
+  connection.on('data', function(data) {
     if (stage === 5) {
       // pipe sockets
       data = encryptor.encrypt(data);
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(data, { binary: true });
-        if (ws.bufferedAmount > 0) { connection.pause(); }
+        if (ws.bufferedAmount > 0) {
+          connection.pause();
+        }
       }
       return;
     }
     if (stage === 0) {
       const tempBuf = new Buffer(2);
-      tempBuf.write("\u0005\u0000", 0);
+      tempBuf.write('\u0005\u0000', 0);
       connection.write(tempBuf);
       stage = 1;
       return;
@@ -125,34 +137,34 @@ var server = net.createServer(function(connection) {
         const cmd = data[1];
         const addrtype = data[3];
         if (cmd !== 1) {
-          console.log("unsupported cmd:", cmd);
-          const reply = new Buffer("\u0005\u0007\u0000\u0001", "binary");
+          console.log('unsupported cmd:', cmd);
+          const reply = new Buffer('\u0005\u0007\u0000\u0001', 'binary');
           connection.end(reply);
           return;
         }
         if (addrtype === 3) {
           addrLen = data[4];
         } else if (addrtype !== 1) {
-          console.log("unsupported addrtype:", addrtype);
+          console.log('unsupported addrtype:', addrtype);
           connection.end();
           return;
         }
-        addrToSend = data.slice(3, 4).toString("binary");
+        addrToSend = data.slice(3, 4).toString('binary');
         // read address and port
         if (addrtype === 1) {
           remoteAddr = inetNtoa(data.slice(4, 8));
-          addrToSend += data.slice(4, 10).toString("binary");
+          addrToSend += data.slice(4, 10).toString('binary');
           remotePort = data.readUInt16BE(8);
           headerLength = 10;
         } else {
-          remoteAddr = data.slice(5, 5 + addrLen).toString("binary");
-          addrToSend += data.slice(4, 5 + addrLen + 2).toString("binary");
+          remoteAddr = data.slice(5, 5 + addrLen).toString('binary');
+          addrToSend += data.slice(4, 5 + addrLen + 2).toString('binary');
           remotePort = data.readUInt16BE(5 + addrLen);
           headerLength = 5 + addrLen + 2;
         }
         let buf = new Buffer(10);
-        buf.write("\u0005\u0000\u0000\u0001", 0, 4, "binary");
-        buf.write("\u0000\u0000\u0000\u0000", 4, 4, "binary");
+        buf.write('\u0005\u0000\u0000\u0001', 0, 4, 'binary');
+        buf.write('\u0000\u0000\u0000\u0000', 4, 4, 'binary');
         buf.writeUInt16BE(remotePort, 8);
         connection.write(buf);
         // connect to remote server
@@ -169,31 +181,33 @@ var server = net.createServer(function(connection) {
 
           // IMPORTANT! Set the `secureEndpoint` option to `false` when connecting
           //            over "ws://", but `true` when connecting over "wss://"
-          opts.secureEndpoint = parsed.protocol ? parsed.protocol == 'wss:' : false
+          opts.secureEndpoint = parsed.protocol
+            ? parsed.protocol == 'wss:'
+            : false;
 
           const agent = new HttpsProxyAgent(opts);
 
           ws = new WebSocket(aServer, {
-                protocol: "binary",
-                agent
-              });
+            protocol: 'binary',
+            agent
+          });
         } else {
           ws = new WebSocket(aServer, {
-                protocol: "binary"
-              });
+            protocol: 'binary'
+          });
         }
 
-        ws.on("open", function() {
-          ws._socket.on("error", function(e) {
+        ws.on('open', function() {
+          ws._socket.on('error', function(e) {
             console.log(`remote ${remoteAddr}:${remotePort} ${e}`);
             connection.destroy();
             server.getConnections(function(err, count) {
-              console.log("concurrent connections:", count);
+              console.log('concurrent connections:', count);
             });
           });
 
           console.log(`connecting ${remoteAddr} via ${aServer}`);
-          let addrToSendBuf = new Buffer(addrToSend, "binary");
+          let addrToSendBuf = new Buffer(addrToSend, 'binary');
           addrToSendBuf = encryptor.encrypt(addrToSendBuf);
           ws.send(addrToSendBuf, { binary: true });
           let i = 0;
@@ -207,29 +221,29 @@ var server = net.createServer(function(connection) {
           cachedPieces = null; // save memory
           stage = 5;
 
-          ping = setInterval(() => ws.ping("", null, true)
-          , 50 * 1000);
+          ping = setInterval(() => ws.ping('', null, true), 50 * 1000);
 
-          ws._socket.on("drain", () => connection.resume());
-
+          ws._socket.on('drain', () => connection.resume());
         });
 
-        ws.on("message", function(data, flags) {
+        ws.on('message', function(data, flags) {
           data = encryptor.decrypt(data);
-          if (!connection.write(data)) { ws._socket.pause(); }
+          if (!connection.write(data)) {
+            ws._socket.pause();
+          }
         });
 
-        ws.on("close", function() {
+        ws.on('close', function() {
           clearInterval(ping);
-          console.log("remote disconnected");
+          console.log('remote disconnected');
           connection.destroy();
         });
 
-        ws.on("error", function(e) {
+        ws.on('error', function(e) {
           console.log(`remote ${remoteAddr}:${remotePort} error: ${e}`);
           connection.destroy();
           server.getConnections(function(err, count) {
-            console.log("concurrent connections:", count);
+            console.log('concurrent connections:', count);
           });
         });
 
@@ -246,45 +260,57 @@ var server = net.createServer(function(connection) {
         console.log(e);
         connection.destroy();
       }
-    } else if (stage === 4) { cachedPieces.push(data); }
+    } else if (stage === 4) {
+      cachedPieces.push(data);
+    }
   });
-      // remote server not connected
-      // cache received buffers
-      // make sure no data is lost
+  // remote server not connected
+  // cache received buffers
+  // make sure no data is lost
 
-  connection.on("end", function() {
-    console.log("local disconnected");
-    if (ws) { ws.terminate(); }
+  connection.on('end', function() {
+    console.log('local disconnected');
+    if (ws) {
+      ws.terminate();
+    }
     server.getConnections(function(err, count) {
-      console.log("concurrent connections:", count);
+      console.log('concurrent connections:', count);
     });
   });
 
-  connection.on("error", function(e){
+  connection.on('error', function(e) {
     console.log(`local error: ${e}`);
-    if (ws) { ws.terminate(); }
+    if (ws) {
+      ws.terminate();
+    }
     server.getConnections(function(err, count) {
-      console.log("concurrent connections:", count);
+      console.log('concurrent connections:', count);
     });
   });
 
-  connection.on("drain", function() {
-    if (ws && ws._socket) { ws._socket.resume(); }
+  connection.on('drain', function() {
+    if (ws && ws._socket) {
+      ws._socket.resume();
+    }
   });
 
   connection.setTimeout(timeout, function() {
-    console.log("local timeout");
+    console.log('local timeout');
     connection.destroy();
-    if (ws) { ws.terminate(); }
+    if (ws) {
+      ws.terminate();
+    }
   });
 });
 
 server.listen(PORT, LOCAL_ADDRESS, function() {
   const address = server.address();
-  console.log("server listening at", address);
+  console.log('server listening at', address);
 });
 
-server.on("error", function(e) {
-  if (e.code === "EADDRINUSE") { console.log("address in use, aborting"); }
+server.on('error', function(e) {
+  if (e.code === 'EADDRINUSE') {
+    console.log('address in use, aborting');
+  }
   process.exit(1);
 });
