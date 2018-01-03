@@ -1,11 +1,3 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * DS104: Avoid inline assignments
- * DS204: Change includes calls to have a more natural evaluation order
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
-let needle;
 const net = require("net");
 const fs = require("fs");
 const path = require("path");
@@ -51,13 +43,13 @@ const PORT = config.remote_port;
 const KEY = config.password;
 let METHOD = config.method;
 
-if ((needle = METHOD.toLowerCase(), ["", "null", "table"].includes(needle))) {
+if (["", "null", "table"].includes(METHOD.toLowerCase())) {
   METHOD = null;
 }
 
 const server = http.createServer(function(req, res) {
   res.writeHead(200, {'Content-Type': 'text/plain'});
-  return res.end("asdf.");
+  res.end("asdf.");
 });
 
 const wss = new WebSocketServer({server});
@@ -77,7 +69,6 @@ wss.on("connection", function(ws) {
     data = encryptor.decrypt(data);
     if (stage === 5) {
       if (!remote.write(data)) { ws._socket.pause(); }
-      return;
     }
     if (stage === 0) {
       try {
@@ -111,7 +102,7 @@ wss.on("connection", function(ws) {
             i++;
           }
           cachedPieces = null; // save memory
-          return stage = 5;
+          stage = 5;
         });
         remote.on("data", function(data) {
           data = encryptor.encrypt(data);
@@ -123,20 +114,20 @@ wss.on("connection", function(ws) {
 
         remote.on("end", function() {
           ws.close();
-          return console.log("remote disconnected");
+          console.log("remote disconnected");
         });
 
         remote.on("drain", () => ws._socket.resume());
 
         remote.on("error", function(e){
           ws.terminate();
-          return console.log(`remote: ${e}`);
+          console.log(`remote: ${e}`);
         });
 
         remote.setTimeout(timeout, function() {
           console.log("remote timeout");
           remote.destroy();
-          return ws.close();
+          ws.close();
         });
 
         if (data.length > headerLength) {
@@ -146,45 +137,47 @@ wss.on("connection", function(ws) {
           cachedPieces.push(buf);
           buf = null;
         }
-        return stage = 4;
+        stage = 4;
       } catch (error) {
         // may encouter index out of range
         const e = error;
         console.warn(e);
         if (remote) { remote.destroy(); }
-        return ws.close();
+        ws.close();
       }
-    } else if (stage === 4) { return cachedPieces.push(data); }
+    } else if (stage === 4) {
+	// remote server not connected
+	// cache received buffers
+	// make sure no data is lost
+	cachedPieces.push(data);
+    }
   });
-      // remote server not connected
-      // cache received buffers
-      // make sure no data is lost
 
   ws.on("ping", () => ws.pong('', null, true));
 
   ws._socket.on("drain", function() {
-    if (stage === 5) { return remote.resume(); }
+    if (stage === 5) { remote.resume(); }
   });
 
   ws.on("close", function() {
     console.log("server disconnected");
     console.log("concurrent connections:", wss.clients.length);
-    if (remote) { return remote.destroy(); }
+    if (remote) { remote.destroy(); }
   });
 
-  return ws.on("error", function(e) {
+  ws.on("error", function(e) {
     console.warn(`server: ${e}`);
     console.log("concurrent connections:", wss.clients.length);
-    if (remote) { return remote.destroy(); }
+    if (remote) { remote.destroy(); }
   });
 });
 
 server.listen(PORT, LOCAL_ADDRESS, function() {
   const address = server.address();
-  return console.log("server listening at", address);
+  console.log("server listening at", address);
 });
 
 server.on("error", function(e) {
   if (e.code === "EADDRINUSE") { console.log("address in use, aborting"); }
-  return process.exit(1);
+  process.exit(1);
 });

@@ -1,13 +1,3 @@
-/*
- * decaffeinate suggestions:
- * DS101: Remove unnecessary use of Array.from
- * DS102: Remove unnecessary code created because of implicit returns
- * DS104: Avoid inline assignments
- * DS204: Change includes calls to have a more natural evaluation order
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
-let needle;
 const net = require("net");
 const url = require("url");
 const http = require("http");
@@ -54,31 +44,30 @@ const KEY = config.password;
 let METHOD = config.method;
 const timeout = Math.floor(config.timeout * 1000);
 
-if ((needle = METHOD.toLowerCase(), ["", "null", "table"].includes(needle))) {
+if (["", "null", "table"].includes(METHOD.toLowerCase())) {
   METHOD = null;
 }
-  
-const HTTPPROXY = process.env.http_proxy;   
+
+const HTTPPROXY = process.env.http_proxy;
 
 if (HTTPPROXY) {
   console.log("http proxy:", HTTPPROXY);
 }
 
-
 const prepareServer = function(address) {
   const serverUrl = url.parse(address);
   serverUrl.slashes = true;
-  if (serverUrl.protocol == null) { serverUrl.protocol = SCHEME; }
-  if (serverUrl.hostname === null) {
+  if (!serverUrl.protocol) { serverUrl.protocol = SCHEME; }
+  if (!serverUrl.hostname) {
     serverUrl.hostname = address;
     serverUrl.pathname = '/';
   }
-  if (serverUrl.port == null) { serverUrl.port = REMOTE_PORT; }
+  if (!serverUrl.port) { serverUrl.port = REMOTE_PORT; }
   return url.format(serverUrl);
 };
 
 if (SERVER instanceof Array) {
-  SERVER = (Array.from(SERVER).map((s) => prepareServer(s)));
+  SERVER = SERVER.map(s => prepareServer(s));
 } else {
   SERVER = prepareServer(SERVER);
 }
@@ -170,18 +159,18 @@ var server = net.createServer(function(connection) {
         // ws = new WebSocket aServer, protocol: "binary"
 
         if (HTTPPROXY) {
-          // WebSocket endpoint for the proxy to connect to 
+          // WebSocket endpoint for the proxy to connect to
           const endpoint = aServer;
           const parsed = url.parse(endpoint);
           //console.log('attempting to connect to WebSocket %j', endpoint);
-               
-          // create an instance of the `HttpsProxyAgent` class with the proxy server information 
+
+          // create an instance of the `HttpsProxyAgent` class with the proxy server information
           const opts = url.parse(HTTPPROXY);
-               
-          // IMPORTANT! Set the `secureEndpoint` option to `false` when connecting 
-          //            over "ws://", but `true` when connecting over "wss://" 
-          opts.secureEndpoint = parsed.protocol != null ? parsed.protocol : parsed.protocol === {'wss:' : false};
-               
+
+          // IMPORTANT! Set the `secureEndpoint` option to `false` when connecting
+          //            over "ws://", but `true` when connecting over "wss://"
+          opts.secureEndpoint = parsed.protocol ? parsed.protocol == 'wss:' : false
+
           const agent = new HttpsProxyAgent(opts);
 
           ws = new WebSocket(aServer, {
@@ -193,12 +182,12 @@ var server = net.createServer(function(connection) {
                 protocol: "binary"
               });
         }
-        
+
         ws.on("open", function() {
           ws._socket.on("error", function(e) {
             console.log(`remote ${remoteAddr}:${remotePort} ${e}`);
             connection.destroy();
-            return server.getConnections(function(err, count) {
+            server.getConnections(function(err, count) {
               console.log("concurrent connections:", count);
             });
           });
@@ -227,19 +216,19 @@ var server = net.createServer(function(connection) {
 
         ws.on("message", function(data, flags) {
           data = encryptor.decrypt(data);
-          if (!connection.write(data)) { return ws._socket.pause(); }
+          if (!connection.write(data)) { ws._socket.pause(); }
         });
 
         ws.on("close", function() {
           clearInterval(ping);
           console.log("remote disconnected");
-          return connection.destroy();
+          connection.destroy();
         });
 
         ws.on("error", function(e) {
           console.log(`remote ${remoteAddr}:${remotePort} error: ${e}`);
           connection.destroy();
-          return server.getConnections(function(err, count) {
+          server.getConnections(function(err, count) {
             console.log("concurrent connections:", count);
           });
         });
@@ -250,14 +239,14 @@ var server = net.createServer(function(connection) {
           cachedPieces.push(buf);
           buf = null;
         }
-        return stage = 4;
+        stage = 4;
       } catch (error) {
         // may encounter index out of range
         const e = error;
         console.log(e);
-        return connection.destroy();
+        connection.destroy();
       }
-    } else if (stage === 4) { return cachedPieces.push(data); }
+    } else if (stage === 4) { cachedPieces.push(data); }
   });
       // remote server not connected
       // cache received buffers
@@ -266,7 +255,7 @@ var server = net.createServer(function(connection) {
   connection.on("end", function() {
     console.log("local disconnected");
     if (ws) { ws.terminate(); }
-    return server.getConnections(function(err, count) {
+    server.getConnections(function(err, count) {
       console.log("concurrent connections:", count);
     });
   });
@@ -274,28 +263,28 @@ var server = net.createServer(function(connection) {
   connection.on("error", function(e){
     console.log(`local error: ${e}`);
     if (ws) { ws.terminate(); }
-    return server.getConnections(function(err, count) {
+    server.getConnections(function(err, count) {
       console.log("concurrent connections:", count);
     });
   });
 
   connection.on("drain", function() {
-    if (ws && ws._socket) { return ws._socket.resume(); }
+    if (ws && ws._socket) { ws._socket.resume(); }
   });
 
-  return connection.setTimeout(timeout, function() {
+  connection.setTimeout(timeout, function() {
     console.log("local timeout");
     connection.destroy();
-    if (ws) { return ws.terminate(); }
+    if (ws) { ws.terminate(); }
   });
 });
 
 server.listen(PORT, LOCAL_ADDRESS, function() {
   const address = server.address();
-  return console.log("server listening at", address);
+  console.log("server listening at", address);
 });
 
 server.on("error", function(e) {
   if (e.code === "EADDRINUSE") { console.log("address in use, aborting"); }
-  return process.exit(1);
+  process.exit(1);
 });

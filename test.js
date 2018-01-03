@@ -1,8 +1,3 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 // test encryption
 const encrypt = require("./encrypt");
 const target = [
@@ -30,14 +25,14 @@ let curlRunning = false;
 local.on('exit', function(code){
   server.kill();
   if (!curlRunning) {
-    return process.exit(code);
+    process.exit(code);
   }
 });
 
 server.on('exit', function(code){
   local.kill();
   if (!curlRunning) {
-    return process.exit(code);
+    process.exit(code);
   }
 });
 
@@ -53,16 +48,16 @@ const runCurl = function() {
     server.kill();
     if (code === 0) {
       console.log('Test passed');
-      return process.exit(0);
+      process.exit(0);
     } else {
       console.error('Test failed');
-      return process.exit(code);
+      process.exit(code);
     }
   });
 
   curl.stdout.on('data', data => console.log(data.toString()));
 
-  return curl.stderr.on('data', data => console.warn(data.toString()));
+  curl.stderr.on('data', data => console.warn(data.toString()));
 };
 
 local.stderr.on('data', data => console.warn(data.toString()));
@@ -74,7 +69,7 @@ local.stdout.on('data', function(data) {
   if (data.toString().indexOf('listening at') >= 0) {
     localReady = true;
     if (localReady && serverReady && !curlRunning) {
-      return runCurl();
+      runCurl();
     }
   }
 });
@@ -84,7 +79,7 @@ server.stdout.on('data', function(data) {
   if (data.toString().indexOf('listening at') >= 0) {
     serverReady = true;
     if (localReady && serverReady && !curlRunning) {
-      return runCurl();
+      runCurl();
     }
   }
 });

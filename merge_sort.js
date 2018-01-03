@@ -1,8 +1,3 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 const merge = function(left, right, comparison) {
   const result = new Array();
   while ((left.length > 0) && (right.length > 0)) {

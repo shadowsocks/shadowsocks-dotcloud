@@ -1,10 +1,3 @@
-/*
- * decaffeinate suggestions:
- * DS101: Remove unnecessary use of Array.from
- * DS102: Remove unnecessary code created because of implicit returns
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 const crypto = require("crypto");
 const { merge_sort } = require("./merge_sort");
 const int32Max = Math.pow(2, 32);
@@ -123,26 +116,25 @@ class Encryptor {
     if (this.method === 'table') {
       this.method = null;
     }
-    if (this.method != null) {
+    if (this.method) {
       this.cipher = this.get_cipher(this.key, this.method, 1, crypto.randomBytes(32));
     } else {
-      [this.encryptTable, this.decryptTable] = Array.from(getTable(this.key));
+      [this.encryptTable, this.decryptTable] = getTable(this.key);
     }
   }
 
   get_cipher_len(method) {
     method = method.toLowerCase();
-    const m = method_supported[method];
-    return m;
+    return method_supported[method];
   }
 
   get_cipher(password, method, op, iv) {
     method = method.toLowerCase();
     password = new Buffer(password, 'binary');
     const m = this.get_cipher_len(method);
-    if (m != null) {
-      const [key, iv_] = Array.from(EVP_BytesToKey(password, m[0], m[1]));
-      if ((iv == null)) {
+    if (m) {
+      const [key, iv_] = EVP_BytesToKey(password, m[0], m[1]);
+      if (!iv) {
         iv = iv_;
       }
       if (op === 1) {
@@ -162,7 +154,7 @@ class Encryptor {
   }
 
   encrypt(buf) {
-    if (this.method != null) {
+    if (this.method) {
       const result = this.cipher.update(buf);
       if (this.iv_sent) {
         return result;
@@ -176,9 +168,9 @@ class Encryptor {
   }
 
   decrypt(buf) {
-    if (this.method != null) {
+    if (this.method) {
       let result;
-      if ((this.decipher == null)) {
+      if (!this.decipher) {
         const decipher_iv_len = this.get_cipher_len(this.method)[1];
         const decipher_iv = buf.slice(0, decipher_iv_len);
         this.decipher = this.get_cipher(this.key, this.method, 0, decipher_iv);
@@ -193,7 +185,6 @@ class Encryptor {
     }
   }
 }
-
 
 exports.Encryptor = Encryptor;
 exports.getTable = getTable;
