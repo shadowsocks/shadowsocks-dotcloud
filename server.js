@@ -74,9 +74,7 @@ wss.on('connection', function(ws) {
   ws.on('message', function(data, flags) {
     data = encryptor.decrypt(data);
     if (stage === 5) {
-      if (!remote.write(data)) {
-        ws.pause();
-      }
+      remote.write(data);
     }
     if (stage === 0) {
       try {
@@ -116,9 +114,6 @@ wss.on('connection', function(ws) {
           data = encryptor.encrypt(data);
           if (ws.readyState === WebSocket.OPEN) {
             ws.send(data, { binary: true });
-            if (ws.bufferedAmount > 0) {
-              remote.pause();
-            }
           }
         });
 
@@ -126,8 +121,6 @@ wss.on('connection', function(ws) {
           ws.close();
           console.log('remote disconnected');
         });
-
-        remote.on('drain', () => ws.resume());
 
         remote.on('error', function(e) {
           ws.terminate();
@@ -166,12 +159,6 @@ wss.on('connection', function(ws) {
   });
 
   ws.on('ping', () => ws.pong('', null, true));
-
-  ws.on('drain', function() {
-    if (stage === 5) {
-      remote.resume();
-    }
-  });
 
   ws.on('close', function() {
     console.log('server disconnected');

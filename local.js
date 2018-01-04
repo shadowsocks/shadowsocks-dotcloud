@@ -112,9 +112,6 @@ var server = net.createServer(function(connection) {
       data = encryptor.encrypt(data);
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(data, { binary: true });
-        if (ws.bufferedAmount > 0) {
-          connection.pause();
-        }
       }
       return;
     }
@@ -214,15 +211,11 @@ var server = net.createServer(function(connection) {
           stage = 5;
 
           ping = setInterval(() => ws.ping('', null, true), 50 * 1000);
-
-          ws.on('drain', () => connection.resume());
         });
 
         ws.on('message', function(data, flags) {
           data = encryptor.decrypt(data);
-          if (!connection.write(data)) {
-            ws.pause();
-          }
+          connection.write(data);
         });
 
         ws.on('close', function() {
@@ -278,12 +271,6 @@ var server = net.createServer(function(connection) {
     server.getConnections(function(err, count) {
       console.log('concurrent connections:', count);
     });
-  });
-
-  connection.on('drain', function() {
-    if (ws) {
-      ws.resume();
-    }
   });
 
   connection.setTimeout(timeout, function() {
