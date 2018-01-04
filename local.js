@@ -198,7 +198,7 @@ var server = net.createServer(function(connection) {
         }
 
         ws.on('open', function() {
-          ws._socket.on('error', function(e) {
+          ws.on('error', function(e) {
             console.log(`remote ${remoteAddr}:${remotePort} ${e}`);
             connection.destroy();
             server.getConnections(function(err, count) {
@@ -223,13 +223,13 @@ var server = net.createServer(function(connection) {
 
           ping = setInterval(() => ws.ping('', null, true), 50 * 1000);
 
-          ws._socket.on('drain', () => connection.resume());
+          ws.on('drain', () => connection.resume());
         });
 
         ws.on('message', function(data, flags) {
           data = encryptor.decrypt(data);
           if (!connection.write(data)) {
-            ws._socket.pause();
+            ws.pause();
           }
         });
 
@@ -289,8 +289,8 @@ var server = net.createServer(function(connection) {
   });
 
   connection.on('drain', function() {
-    if (ws && ws._socket) {
-      ws._socket.resume();
+    if (ws) {
+      ws.resume();
     }
   });
 

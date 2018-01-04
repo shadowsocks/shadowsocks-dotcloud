@@ -75,7 +75,7 @@ wss.on('connection', function(ws) {
     data = encryptor.decrypt(data);
     if (stage === 5) {
       if (!remote.write(data)) {
-        ws._socket.pause();
+        ws.pause();
       }
     }
     if (stage === 0) {
@@ -127,7 +127,7 @@ wss.on('connection', function(ws) {
           console.log('remote disconnected');
         });
 
-        remote.on('drain', () => ws._socket.resume());
+        remote.on('drain', () => ws.resume());
 
         remote.on('error', function(e) {
           ws.terminate();
@@ -167,7 +167,7 @@ wss.on('connection', function(ws) {
 
   ws.on('ping', () => ws.pong('', null, true));
 
-  ws._socket.on('drain', function() {
+  ws.on('drain', function() {
     if (stage === 5) {
       remote.resume();
     }
