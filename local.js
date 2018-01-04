@@ -198,14 +198,6 @@ var server = net.createServer(function(connection) {
         }
 
         ws.on('open', function() {
-          ws.on('error', function(e) {
-            console.log(`remote ${remoteAddr}:${remotePort} ${e}`);
-            connection.destroy();
-            server.getConnections(function(err, count) {
-              console.log('concurrent connections:', count);
-            });
-          });
-
           console.log(`connecting ${remoteAddr} via ${aServer}`);
           let addrToSendBuf = new Buffer(addrToSend, 'binary');
           addrToSendBuf = encryptor.encrypt(addrToSendBuf);
