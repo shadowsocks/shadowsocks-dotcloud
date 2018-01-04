@@ -62,7 +62,7 @@ const wss = new WebSocketServer({ server });
 
 wss.on('connection', function(ws) {
   console.log('server connected');
-  console.log('concurrent connections:', wss.clients.length);
+  console.log('concurrent connections:', wss.clients.size);
   const encryptor = new Encryptor(KEY, METHOD);
   let stage = 0;
   let headerLength = 0;
@@ -175,7 +175,7 @@ wss.on('connection', function(ws) {
 
   ws.on('close', function() {
     console.log('server disconnected');
-    console.log('concurrent connections:', wss.clients.length);
+    console.log('concurrent connections:', wss.clients.size);
     if (remote) {
       remote.destroy();
     }
@@ -183,7 +183,7 @@ wss.on('connection', function(ws) {
 
   ws.on('error', function(e) {
     console.warn(`server: ${e}`);
-    console.log('concurrent connections:', wss.clients.length);
+    console.log('concurrent connections:', wss.clients.size);
     if (remote) {
       remote.destroy();
     }

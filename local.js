@@ -261,12 +261,12 @@ var server = net.createServer(function(connection) {
         connection.destroy();
       }
     } else if (stage === 4) {
+      // remote server not connected
+      // cache received buffers
+      // make sure no data is lost
       cachedPieces.push(data);
     }
   });
-  // remote server not connected
-  // cache received buffers
-  // make sure no data is lost
 
   connection.on('end', function() {
     console.log('local disconnected');
