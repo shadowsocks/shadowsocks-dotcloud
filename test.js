@@ -44,9 +44,9 @@ const runCurl = function() {
   curlRunning = true;
   const curl = child_process.spawn('curl', [
     '-v',
-    'http://www.example.com/',
+    'https://www.example.com',
     '-L',
-    '--socks5-hostname',
+    '--socks5',
     '127.0.0.1:1080'
   ]);
   curl.on('exit', function(code) {
