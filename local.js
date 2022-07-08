@@ -210,7 +210,7 @@ var server = net.createServer(function(connection) {
           cachedPieces = null; // save memory
           stage = 5;
 
-          ping = setInterval(() => ws.ping('', null, true), 50 * 1000);
+          ping = setInterval(() => ws.ping('', null, ()=>true), 50 * 1000);
         });
 
         ws.on('message', function(data, flags) {
