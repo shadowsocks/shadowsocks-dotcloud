@@ -3,9 +3,9 @@
   "version": "0.9.10",
   "dependencies": {
     "bufferutil": "^4.0.1",
-    "https-proxy-agent": "^2.2.1",
+    "https-proxy-agent": "^7.0.4",
     "minimist": "^1.2.0",
-    "ws": "^6.1.4"
+    "ws": "^8.16.0"
   },
   "scripts": {
     "start": "node server.js -b 0.0.0.0"

@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const WebSocket = require('ws');
 const parseArgs = require('minimist');
-const HttpsProxyAgent = require('https-proxy-agent');
+const { HttpsProxyAgent } = require('https-proxy-agent');
 const { Encryptor } = require('./encrypt');
 
 const options = {
