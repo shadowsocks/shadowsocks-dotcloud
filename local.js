@@ -115,7 +115,7 @@ var server = net.createServer(function (connection) {
       return;
     }
     if (stage === 0) {
-      const tempBuf = new Buffer(2);
+      const tempBuf = Buffer.alloc(2);
       tempBuf.write('\u0005\u0000', 0);
       connection.write(tempBuf);
       stage = 1;
@@ -134,7 +134,7 @@ var server = net.createServer(function (connection) {
         const addrtype = data[3];
         if (cmd !== 1) {
           console.log('unsupported cmd:', cmd);
-          const reply = new Buffer('\u0005\u0007\u0000\u0001', 'binary');
+          const reply = Buffer.from('\u0005\u0007\u0000\u0001', 'binary');
           connection.end(reply);
           return;
         }
@@ -158,7 +158,7 @@ var server = net.createServer(function (connection) {
           remotePort = data.readUInt16BE(5 + addrLen);
           headerLength = 5 + addrLen + 2;
         }
-        let buf = new Buffer(10);
+        let buf = Buffer.alloc(10);
         buf.write('\u0005\u0000\u0000\u0001', 0, 4, 'binary');
         buf.write('\u0000\u0000\u0000\u0000', 4, 4, 'binary');
         buf.writeUInt16BE(remotePort, 8);
@@ -195,7 +195,7 @@ var server = net.createServer(function (connection) {
 
         ws.on('open', function () {
           console.log(`connecting ${remoteAddr} via ${aServer}`);
-          let addrToSendBuf = new Buffer(addrToSend, 'binary');
+          let addrToSendBuf = Buffer.from(addrToSend, 'binary');
           addrToSendBuf = encryptor.encrypt(addrToSendBuf);
           ws.send(addrToSendBuf, {binary: true});
           let i = 0;
@@ -232,7 +232,7 @@ var server = net.createServer(function (connection) {
         });
 
         if (data.length > headerLength) {
-          buf = new Buffer(data.length - headerLength);
+          buf = Buffer.alloc(data.length - headerLength);
           data.copy(buf, 0, headerLength);
           cachedPieces.push(buf);
           buf = null;
