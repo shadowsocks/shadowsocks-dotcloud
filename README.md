@@ -5,7 +5,7 @@ shadowsocks-heroku is a lightweight tunnel proxy which can help you get through 
 
 shadowsocks-heroku uses WebSocket instead of raw sockets, so it can be deployed on [Heroku](https://www.heroku.com/).
 
-Notice that the protocol is INCOMPATIBLE with the origin shadowsocks.
+Notice that the protocol is INCOMPATIBLE with shadowsocks.
 
 Heroku
 ------
@@ -34,10 +34,10 @@ To git@heroku.com:still-tor-8707.git
 Set a few configs:
 
 ```
-$ heroku config:set METHOD=table KEY=foobar
+$ heroku config:set METHOD=aes-128-cfb KEY=foobar
 Setting config vars and restarting still-tor-8707... done, v11
 KEY:    foobar
-METHOD: table
+METHOD: aes-128-cfb
 ```
 
 Install project dependencies with `npm install`:
@@ -50,7 +50,7 @@ $ npm install
 Then run:
 
 ```
-$ node local.js -s still-tor-8707.herokuapp.com -l 1080 -m table -k foobar -r 80
+$ node local.js -s still-tor-8707.herokuapp.com -l 1080 -m aes-128-cfb -k foobar -r 80
 server listening at { address: '127.0.0.1', family: 'IPv4', port: 1080 }
 ```
 
@@ -71,16 +71,9 @@ $ heroku logs -t --app still-tor-8707
 Supported Ciphers
 -----------------
 
-- table
-- bf-cfb
-- des-cfb
-- rc2-cfb
-- idea-cfb
-- seed-cfb
-- cast5-cfb
 - aes-128-cfb
 - aes-192-cfb
 - aes-256-cfb
-- camellia-256-cfb
-- camellia-192-cfb
 - camellia-128-cfb
+- camellia-192-cfb
+- camellia-256-cfb

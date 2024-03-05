@@ -59,10 +59,6 @@ const KEY = config.password;
 let METHOD = config.method;
 const highWaterMark = +process.env.HIGH_WATER_MARK || 64 * 1024;
 
-if (['', 'null', 'table'].includes(METHOD.toLowerCase())) {
-  METHOD = null;
-}
-
 const server = http.createServer(function (req, res) {
   res.writeHead(200, {'Content-Type': 'text/plain'});
   res.end('asdf.');

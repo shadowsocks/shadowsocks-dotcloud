@@ -1,55 +1,4 @@
 import crypto from 'crypto';
-const int32Max = Math.pow(2, 32);
-
-const cachedTables = {}; // password: [encryptTable, decryptTable]
-
-const getTable = function (key) {
-  if (cachedTables[key]) {
-    return cachedTables[key];
-  }
-  console.log('calculating ciphers');
-  let table = new Array(256);
-  const decrypt_table = new Array(256);
-  const md5sum = crypto.createHash('md5');
-  md5sum.update(key);
-  const hash = Buffer.from(md5sum.digest(), 'binary');
-  const al = hash.readUInt32LE(0);
-  const ah = hash.readUInt32LE(4);
-  let i = 0;
-
-  while (i < 256) {
-    table[i] = i;
-    i++;
-  }
-  i = 1;
-
-  while (i < 1024) {
-    table.sort(
-      (x, y) =>
-        (((ah % (x + i)) * int32Max + al) % (x + i)) -
-        (((ah % (y + i)) * int32Max + al) % (y + i)),
-    );
-    i++;
-  }
-  i = 0;
-  while (i < 256) {
-    decrypt_table[table[i]] = i;
-    ++i;
-  }
-  const result = [table, decrypt_table];
-  cachedTables[key] = result;
-  return result;
-};
-
-const substitute = function (table, buf) {
-  let i = 0;
-
-  while (i < buf.length) {
-    buf[i] = table[buf[i]];
-    i++;
-  }
-  return buf;
-};
 
 const bytes_to_key_results = {};
 
@@ -83,35 +32,22 @@ const method_supported = {
   'aes-128-cfb': [16, 16],
   'aes-192-cfb': [24, 16],
   'aes-256-cfb': [32, 16],
-  'bf-cfb': [16, 8],
   'camellia-128-cfb': [16, 16],
   'camellia-192-cfb': [24, 16],
   'camellia-256-cfb': [32, 16],
-  'cast5-cfb': [16, 8],
-  'des-cfb': [8, 8],
-  'idea-cfb': [16, 8],
-  'rc2-cfb': [16, 8],
-  'seed-cfb': [16, 16],
 };
 
-class Encryptor {
+export class Encryptor {
   constructor(key, method) {
     this.key = key;
     this.method = method;
     this.iv_sent = false;
-    if (this.method === 'table') {
-      this.method = null;
-    }
-    if (this.method) {
-      this.cipher = this.get_cipher(
-        this.key,
-        this.method,
-        1,
-        crypto.randomBytes(32),
-      );
-    } else {
-      [this.encryptTable, this.decryptTable] = getTable(this.key);
-    }
+    this.cipher = this.get_cipher(
+      this.key,
+      this.method,
+      1,
+      crypto.randomBytes(32),
+    );
   }
 
   get_cipher_len(method) {
@@ -141,36 +77,23 @@ class Encryptor {
   }
 
   encrypt(buf) {
-    if (this.method) {
-      const result = this.cipher.update(buf);
-      if (this.iv_sent) {
-        return result;
-      } else {
-        this.iv_sent = true;
-        return Buffer.concat([this.cipher_iv, result]);
-      }
+    const result = this.cipher.update(buf);
+    if (this.iv_sent) {
+      return result;
     } else {
-      return substitute(this.encryptTable, buf);
+      this.iv_sent = true;
+      return Buffer.concat([this.cipher_iv, result]);
     }
   }
 
   decrypt(buf) {
-    if (this.method) {
-      let result;
-      if (!this.decipher) {
-        const decipher_iv_len = this.get_cipher_len(this.method)[1];
-        const decipher_iv = buf.slice(0, decipher_iv_len);
-        this.decipher = this.get_cipher(this.key, this.method, 0, decipher_iv);
-        result = this.decipher.update(buf.slice(decipher_iv_len));
-        return result;
-      } else {
-        result = this.decipher.update(buf);
-        return result;
-      }
+    if (!this.decipher) {
+      const decipher_iv_len = this.get_cipher_len(this.method)[1];
+      const decipher_iv = buf.slice(0, decipher_iv_len);
+      this.decipher = this.get_cipher(this.key, this.method, 0, decipher_iv);
+      return this.decipher.update(buf.slice(decipher_iv_len));
     } else {
-      return substitute(this.decryptTable, buf);
+      return this.decipher.update(buf);
     }
   }
 }
-
-export {Encryptor, getTable};

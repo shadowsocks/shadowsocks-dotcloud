@@ -58,11 +58,6 @@ const PORT = config.local_port;
 const KEY = config.password;
 let METHOD = config.method;
 const timeout = Math.floor(config.timeout * 1000);
-
-if (['', 'null', 'table'].includes(METHOD.toLowerCase())) {
-  METHOD = null;
-}
-
 const HTTPPROXY = process.env.http_proxy;
 
 if (HTTPPROXY) {
