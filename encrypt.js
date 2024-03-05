@@ -3,7 +3,7 @@ const int32Max = Math.pow(2, 32);
 
 const cachedTables = {}; // password: [encryptTable, decryptTable]
 
-const getTable = function(key) {
+const getTable = function (key) {
   if (cachedTables[key]) {
     return cachedTables[key];
   }
@@ -24,9 +24,11 @@ const getTable = function(key) {
   i = 1;
 
   while (i < 1024) {
-    table.sort((x, y) =>
-      ((ah % (x + i)) * int32Max + al) % (x + i) -
-      ((ah % (y + i)) * int32Max + al) % (y + i));
+    table.sort(
+      (x, y) =>
+        (((ah % (x + i)) * int32Max + al) % (x + i)) -
+        (((ah % (y + i)) * int32Max + al) % (y + i)),
+    );
     i++;
   }
   i = 0;
@@ -39,7 +41,7 @@ const getTable = function(key) {
   return result;
 };
 
-const substitute = function(table, buf) {
+const substitute = function (table, buf) {
   let i = 0;
 
   while (i < buf.length) {
@@ -51,7 +53,7 @@ const substitute = function(table, buf) {
 
 const bytes_to_key_results = {};
 
-const EVP_BytesToKey = function(password, key_len, iv_len) {
+const EVP_BytesToKey = function (password, key_len, iv_len) {
   if (bytes_to_key_results[`${password}:${key_len}:${iv_len}`]) {
     return bytes_to_key_results[`${password}:${key_len}:${iv_len}`];
   }
@@ -91,10 +93,10 @@ const method_supported = {
   'rc2-cfb': [16, 8],
   rc4: [16, 0],
   'rc4-md5': [16, 16],
-  'seed-cfb': [16, 16]
+  'seed-cfb': [16, 16],
 };
 
-const create_rc4_md5_cipher = function(key, iv, op) {
+const create_rc4_md5_cipher = function (key, iv, op) {
   const md5 = crypto.createHash('md5');
   md5.update(key);
   md5.update(iv);
@@ -119,7 +121,7 @@ class Encryptor {
         this.key,
         this.method,
         1,
-        crypto.randomBytes(32)
+        crypto.randomBytes(32),
       );
     } else {
       [this.encryptTable, this.decryptTable] = getTable(this.key);

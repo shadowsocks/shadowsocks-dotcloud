@@ -5,7 +5,7 @@ const http = require('http');
 const WebSocket = require('ws');
 const WebSocketServer = WebSocket.Server;
 const parseArgs = require('minimist');
-const { Encryptor } = require('./encrypt');
+const {Encryptor} = require('./encrypt');
 
 const options = {
   alias: {
@@ -13,15 +13,15 @@ const options = {
     r: 'remote_port',
     k: 'password',
     c: 'config_file',
-    m: 'method'
+    m: 'method',
   },
   string: ['local_address', 'password', 'method', 'config_file'],
   default: {
-    config_file: path.resolve(__dirname, 'config.json')
-  }
+    config_file: path.resolve(__dirname, 'config.json'),
+  },
 };
 
-const inetNtoa = buf => buf[0] + '.' + buf[1] + '.' + buf[2] + '.' + buf[3];
+const inetNtoa = (buf) => buf[0] + '.' + buf[1] + '.' + buf[2] + '.' + buf[3];
 
 const configFromArgs = parseArgs(process.argv.slice(2), options);
 const configFile = configFromArgs.config_file;
@@ -53,14 +53,14 @@ if (['', 'null', 'table'].includes(METHOD.toLowerCase())) {
   METHOD = null;
 }
 
-const server = http.createServer(function(req, res) {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
+const server = http.createServer(function (req, res) {
+  res.writeHead(200, {'Content-Type': 'text/plain'});
   res.end('asdf.');
 });
 
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({server});
 
-wss.on('connection', function(ws) {
+wss.on('connection', function (ws) {
   console.log('server connected');
   console.log('concurrent connections:', wss.clients.size);
   const encryptor = new Encryptor(KEY, METHOD);
@@ -71,7 +71,7 @@ wss.on('connection', function(ws) {
   let addrLen = 0;
   let remoteAddr = null;
   let remotePort = null;
-  ws.on('message', function(data, flags) {
+  ws.on('message', function (data, flags) {
     data = encryptor.decrypt(data);
     if (stage === 5) {
       remote.write(data);
@@ -98,7 +98,7 @@ wss.on('connection', function(ws) {
         }
 
         // connect remote server
-        remote = net.connect(remotePort, remoteAddr, function() {
+        remote = net.connect(remotePort, remoteAddr, function () {
           console.log('connecting', remoteAddr);
           let i = 0;
 
@@ -110,24 +110,24 @@ wss.on('connection', function(ws) {
           cachedPieces = null; // save memory
           stage = 5;
         });
-        remote.on('data', function(data) {
+        remote.on('data', function (data) {
           data = encryptor.encrypt(data);
           if (ws.readyState === WebSocket.OPEN) {
-            ws.send(data, { binary: true });
+            ws.send(data, {binary: true});
           }
         });
 
-        remote.on('end', function() {
+        remote.on('end', function () {
           ws.close();
           console.log('remote disconnected');
         });
 
-        remote.on('error', function(e) {
+        remote.on('error', function (e) {
           ws.terminate();
           console.log(`remote: ${e}`);
         });
 
-        remote.setTimeout(timeout, function() {
+        remote.setTimeout(timeout, function () {
           console.log('remote timeout');
           remote.destroy();
           ws.close();
@@ -160,7 +160,7 @@ wss.on('connection', function(ws) {
 
   ws.on('ping', () => ws.pong('', null, true));
 
-  ws.on('close', function() {
+  ws.on('close', function () {
     console.log('server disconnected');
     console.log('concurrent connections:', wss.clients.size);
     if (remote) {
@@ -168,7 +168,7 @@ wss.on('connection', function(ws) {
     }
   });
 
-  ws.on('error', function(e) {
+  ws.on('error', function (e) {
     console.warn(`server: ${e}`);
     console.log('concurrent connections:', wss.clients.size);
     if (remote) {
@@ -177,12 +177,12 @@ wss.on('connection', function(ws) {
   });
 });
 
-server.listen(PORT, LOCAL_ADDRESS, function() {
+server.listen(PORT, LOCAL_ADDRESS, function () {
   const address = server.address();
   console.log('server listening at', address);
 });
 
-server.on('error', function(e) {
+server.on('error', function (e) {
   if (e.code === 'EADDRINUSE') {
     console.log('address in use, aborting');
   }
