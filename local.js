@@ -6,6 +6,7 @@ import WebSocket from 'ws';
 import parseArgs from 'minimist';
 import {HttpsProxyAgent} from 'https-proxy-agent';
 import {Encryptor} from './encrypt.js';
+import {inetNtoa} from './utils.js';
 
 const options = {
   alias: {
@@ -28,18 +29,6 @@ const options = {
   default: {
     config_file: './config.json',
   },
-};
-
-const inetNtoa = function (family, buf) {
-  if (family === 4) return buf[0] + '.' + buf[1] + '.' + buf[2] + '.' + buf[3];
-  else if (family === 6) {
-    let str = Buffer.alloc(0);
-    for (let i = 0; i < 8; i++) {
-      str += buf.readUInt16BE(i * 2, i * 2 + 2).toString(16);
-      if (i < 7) str += ':';
-    }
-    return str;
-  }
 };
 
 const configFromArgs = parseArgs(process.argv.slice(2), options);
