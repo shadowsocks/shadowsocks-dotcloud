@@ -80,7 +80,7 @@ const runCurl = function () {
   curlRunning = true;
   const curl = child_process.spawn('curl', [
     '-v',
-    'http://127.0.0.1:8080',
+    'https://example.com',
     '-L',
     '--socks5',
     '127.0.0.1:1080',

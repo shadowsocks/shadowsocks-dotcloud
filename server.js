@@ -2,7 +2,7 @@ import net from 'net';
 import fs from 'fs';
 import http from 'http';
 import WebSocket from 'ws';
-import { WebSocketServer } from 'ws';
+import {WebSocketServer} from 'ws';
 import parseArgs from 'minimist';
 import {Encryptor} from './encrypt.js';
 
@@ -20,7 +20,17 @@ const options = {
   },
 };
 
-const inetNtoa = (buf) => buf[0] + '.' + buf[1] + '.' + buf[2] + '.' + buf[3];
+const inetNtoa = function (family, buf) {
+  if (family === 4) return buf[0] + '.' + buf[1] + '.' + buf[2] + '.' + buf[3];
+  else if (family === 6) {
+    let str = Buffer.alloc(0);
+    for (let i = 0; i < 8; i++) {
+      str += buf.readUInt16BE(i * 2, i * 2 + 2).toString(16);
+      if (i < 7) str += ':';
+    }
+    return str;
+  }
+};
 
 const configFromArgs = parseArgs(process.argv.slice(2), options);
 const configFile = configFromArgs.config_file;
@@ -80,23 +90,29 @@ wss.on('connection', function (ws) {
         const addrtype = data[0];
         if (addrtype === 3) {
           addrLen = data[1];
-        } else if (addrtype !== 1) {
+        } else if (addrtype !== 1 && addrtype !== 4) {
           console.warn(`unsupported addrtype: ${addrtype}`);
           ws.close();
           return;
         }
         // read address and port
         if (addrtype === 1) {
-          remoteAddr = inetNtoa(data.slice(1, 5));
+          // ipv4
+          remoteAddr = inetNtoa(4, data.slice(1, 5));
           remotePort = data.readUInt16BE(5);
-          headerLength = 7;
+          headerLength = 1 + 4 + 2;
+        } else if (addrtype === 4) {
+          // ipv6
+          remoteAddr = inetNtoa(6, data.slice(1, 17));
+          remotePort = data.readUInt16BE(17);
+          headerLength = 1 + 16 + 2;
         } else {
           remoteAddr = data.slice(2, 2 + addrLen).toString('binary');
           remotePort = data.readUInt16BE(2 + addrLen);
           headerLength = 2 + addrLen + 2;
         }
 
-        // connect remote server
+        // connect to remote server
         remote = net.connect(remotePort, remoteAddr, function () {
           console.log('connecting', remoteAddr);
           let i = 0;

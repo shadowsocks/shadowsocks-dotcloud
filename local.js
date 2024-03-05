@@ -30,7 +30,17 @@ const options = {
   },
 };
 
-const inetNtoa = (buf) => buf[0] + '.' + buf[1] + '.' + buf[2] + '.' + buf[3];
+const inetNtoa = function (family, buf) {
+  if (family === 4) return buf[0] + '.' + buf[1] + '.' + buf[2] + '.' + buf[3];
+  else if (family === 6) {
+    let str = Buffer.alloc(0);
+    for (let i = 0; i < 8; i++) {
+      str += buf.readUInt16BE(i * 2, i * 2 + 2).toString(16);
+      if (i < 7) str += ':';
+    }
+    return str;
+  }
+};
 
 const configFromArgs = parseArgs(process.argv.slice(2), options);
 const configContent = fs.readFileSync(configFromArgs.config_file);
@@ -140,7 +150,7 @@ var server = net.createServer(function (connection) {
         }
         if (addrtype === 3) {
           addrLen = data[4];
-        } else if (addrtype !== 1) {
+        } else if (addrtype !== 1 && addrtype !== 4) {
           console.log('unsupported addrtype:', addrtype);
           connection.end();
           return;
@@ -148,10 +158,17 @@ var server = net.createServer(function (connection) {
         addrToSend = data.slice(3, 4).toString('binary');
         // read address and port
         if (addrtype === 1) {
-          remoteAddr = inetNtoa(data.slice(4, 8));
+          // ipv4
+          remoteAddr = inetNtoa(4, data.slice(4, 8));
           addrToSend += data.slice(4, 10).toString('binary');
           remotePort = data.readUInt16BE(8);
           headerLength = 10;
+        } else if (addrtype === 4) {
+          // ipv6
+          remoteAddr = inetNtoa(6, data.slice(4, 20));
+          addrToSend += data.slice(4, 22).toString('binary');
+          remotePort = data.readUInt16BE(20);
+          headerLength = 22;
         } else {
           remoteAddr = data.slice(5, 5 + addrLen).toString('binary');
           addrToSend += data.slice(4, 5 + addrLen + 2).toString('binary');
