@@ -214,14 +214,9 @@ var server = net.createServer(function (connection) {
           let addrToSendBuf = Buffer.from(addrToSend, 'binary');
           addrToSendBuf = encryptor.encrypt(addrToSendBuf);
           ws.send(addrToSendBuf, {binary: true});
-          let i = 0;
-
-          while (i < cachedPieces.length) {
-            let piece = cachedPieces[i];
-            piece = encryptor.encrypt(piece);
-            ws.send(piece, {binary: true});
-            i++;
-          }
+          ws.send(encryptor.encrypt(Buffer.concat(cachedPieces)), {
+            binary: true,
+          });
           cachedPieces = null; // save memory
           stage = 5;
         });
