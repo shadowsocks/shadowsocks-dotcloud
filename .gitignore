@@ -59,3 +59,14 @@ typings/
 
 # next.js build output
 .next
+
+# Devenv
+.devenv*
+devenv.local.nix
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml
+

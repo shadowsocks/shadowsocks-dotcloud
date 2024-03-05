@@ -17,8 +17,8 @@ while (i < 256) {
 // test proxy
 
 const child_process = require('child_process');
-const local = child_process.spawn('node', ['local.js']);
-const server = child_process.spawn('node', ['server.js']);
+const local = child_process.spawn(process.execPath, ['local.js']);
+const server = child_process.spawn(process.execPath, ['server.js']);
 
 let curlRunning = false;
 
@@ -44,7 +44,7 @@ const runCurl = function() {
   curlRunning = true;
   const curl = child_process.spawn('curl', [
     '-v',
-    'https://www.example.com',
+    'http://127.0.0.1:8080',
     '-L',
     '--socks5',
     '127.0.0.1:1080'
