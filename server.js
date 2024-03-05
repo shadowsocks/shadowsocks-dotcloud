@@ -57,6 +57,7 @@ const LOCAL_ADDRESS = config.local_address;
 const PORT = config.remote_port;
 const KEY = config.password;
 let METHOD = config.method;
+const highWaterMark = +process.env.HIGH_WATER_MARK || 64 * 1024;
 
 if (['', 'null', 'table'].includes(METHOD.toLowerCase())) {
   METHOD = null;
@@ -131,9 +132,15 @@ wss.on('connection', function (ws) {
           stage = 5;
         });
         remote.on('data', function (data) {
-          data = encryptor.encrypt(data);
           if (ws.readyState === WebSocket.OPEN) {
-            ws.send(data, {binary: true});
+            data = encryptor.encrypt(data);
+            ws.send(data, {binary: true}, (err) => {
+              if (err) return;
+              if (ws.bufferedAmount < highWaterMark && remote.isPaused())
+                remote.resume();
+            });
+            if (ws.bufferedAmount >= highWaterMark && !remote.isPaused())
+              remote.pause();
           }
         });
 
