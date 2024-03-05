@@ -67,7 +67,12 @@ const server = http.createServer(function (req, res) {
   res.end('asdf.');
 });
 
-const wss = new WebSocketServer({server});
+const wss = new WebSocketServer({
+  server,
+  autoPong: true,
+  allowSynchronousEvents: true,
+  perMessageDeflate: false,
+});
 
 wss.on('connection', function (ws) {
   console.log('server connected');
@@ -153,7 +158,6 @@ wss.on('connection', function (ws) {
           let buf = Buffer.alloc(data.length - headerLength);
           data.copy(buf, 0, headerLength);
           cachedPieces.push(buf);
-          buf = null;
         }
         stage = 4;
       } catch (error) {
@@ -172,8 +176,6 @@ wss.on('connection', function (ws) {
       cachedPieces.push(data);
     }
   });
-
-  ws.on('ping', () => ws.pong('', null, true));
 
   ws.on('close', function () {
     console.log('server disconnected');

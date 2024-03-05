@@ -110,7 +110,6 @@ var server = net.createServer(function (connection) {
   let cachedPieces = [];
   let addrLen = 0;
   let ws = null;
-  let ping = null;
   let remoteAddr = null;
   let remotePort = null;
   let addrToSend = '';
@@ -225,8 +224,6 @@ var server = net.createServer(function (connection) {
           }
           cachedPieces = null; // save memory
           stage = 5;
-
-          ping = setInterval(() => ws.ping('', null, () => true), 50 * 1000);
         });
 
         ws.on('message', function (data, flags) {
@@ -235,7 +232,6 @@ var server = net.createServer(function (connection) {
         });
 
         ws.on('close', function () {
-          clearInterval(ping);
           console.log('remote disconnected');
           connection.destroy();
         });
@@ -249,10 +245,9 @@ var server = net.createServer(function (connection) {
         });
 
         if (data.length > headerLength) {
-          buf = Buffer.alloc(data.length - headerLength);
+          let buf = Buffer.alloc(data.length - headerLength);
           data.copy(buf, 0, headerLength);
           cachedPieces.push(buf);
-          buf = null;
         }
         stage = 4;
       } catch (error) {
