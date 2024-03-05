@@ -1,5 +1,6 @@
 // test encryption
-const encrypt = require('./encrypt');
+import * as encrypt from './encrypt.js';
+
 const target = [
   [
     60, 53, 84, 138, 217, 94, 88, 23, 39, 242, 219, 35, 12, 157, 165, 181, 255,
@@ -50,7 +51,8 @@ while (i < 256) {
 
 // test proxy
 
-const child_process = require('child_process');
+import child_process from 'child_process';
+
 const local = child_process.spawn(process.execPath, ['local.js']);
 const server = child_process.spawn(process.execPath, ['server.js']);
 

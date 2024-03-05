@@ -1,11 +1,10 @@
-const net = require('net');
-const fs = require('fs');
-const path = require('path');
-const http = require('http');
-const WebSocket = require('ws');
-const WebSocketServer = WebSocket.Server;
-const parseArgs = require('minimist');
-const {Encryptor} = require('./encrypt');
+import net from 'net';
+import fs from 'fs';
+import http from 'http';
+import WebSocket from 'ws';
+import { WebSocketServer } from 'ws';
+import parseArgs from 'minimist';
+import {Encryptor} from './encrypt.js';
 
 const options = {
   alias: {
@@ -17,7 +16,7 @@ const options = {
   },
   string: ['local_address', 'password', 'method', 'config_file'],
   default: {
-    config_file: path.resolve(__dirname, 'config.json'),
+    config_file: './config.json',
   },
 };
 

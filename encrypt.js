@@ -1,4 +1,4 @@
-const crypto = require('crypto');
+import crypto from 'crypto';
 const int32Max = Math.pow(2, 32);
 
 const cachedTables = {}; // password: [encryptTable, decryptTable]
@@ -191,5 +191,4 @@ class Encryptor {
   }
 }
 
-exports.Encryptor = Encryptor;
-exports.getTable = getTable;
+export {Encryptor, getTable};

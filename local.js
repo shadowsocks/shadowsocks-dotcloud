@@ -1,12 +1,11 @@
-const net = require('net');
-const url = require('url');
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
-const WebSocket = require('ws');
-const parseArgs = require('minimist');
-const {HttpsProxyAgent} = require('https-proxy-agent');
-const {Encryptor} = require('./encrypt');
+import net from 'net';
+import url from 'url';
+import http from 'http';
+import fs from 'fs';
+import WebSocket from 'ws';
+import parseArgs from 'minimist';
+import {HttpsProxyAgent} from 'https-proxy-agent';
+import {Encryptor} from './encrypt.js';
 
 const options = {
   alias: {
@@ -27,7 +26,7 @@ const options = {
     'scheme',
   ],
   default: {
-    config_file: path.resolve(__dirname, 'config.json'),
+    config_file: './config.json',
   },
 };
 
