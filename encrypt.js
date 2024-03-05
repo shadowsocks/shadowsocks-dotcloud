@@ -1,5 +1,4 @@
 const crypto = require('crypto');
-const { merge_sort } = require('./merge_sort');
 const int32Max = Math.pow(2, 32);
 
 const cachedTables = {}; // password: [encryptTable, decryptTable]
@@ -25,12 +24,9 @@ const getTable = function(key) {
   i = 1;
 
   while (i < 1024) {
-    table = merge_sort(
-      table,
-      (x, y) =>
-        ((ah % (x + i)) * int32Max + al) % (x + i) -
-        ((ah % (y + i)) * int32Max + al) % (y + i)
-    );
+    table.sort((x, y) =>
+      ((ah % (x + i)) * int32Max + al) % (x + i) -
+      ((ah % (y + i)) * int32Max + al) % (y + i));
     i++;
   }
   i = 0;
