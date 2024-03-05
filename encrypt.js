@@ -91,21 +91,7 @@ const method_supported = {
   'des-cfb': [8, 8],
   'idea-cfb': [16, 8],
   'rc2-cfb': [16, 8],
-  rc4: [16, 0],
-  'rc4-md5': [16, 16],
   'seed-cfb': [16, 16],
-};
-
-const create_rc4_md5_cipher = function (key, iv, op) {
-  const md5 = crypto.createHash('md5');
-  md5.update(key);
-  md5.update(iv);
-  const rc4_key = md5.digest();
-  if (op === 1) {
-    return crypto.createCipheriv('rc4', rc4_key, '');
-  } else {
-    return crypto.createDecipheriv('rc4', rc4_key, '');
-  }
 };
 
 class Encryptor {
@@ -146,14 +132,10 @@ class Encryptor {
         this.cipher_iv = iv.slice(0, m[1]);
       }
       iv = iv.slice(0, m[1]);
-      if (method === 'rc4-md5') {
-        return create_rc4_md5_cipher(key, iv, op);
+      if (op === 1) {
+        return crypto.createCipheriv(method, key, iv);
       } else {
-        if (op === 1) {
-          return crypto.createCipheriv(method, key, iv);
-        } else {
-          return crypto.createDecipheriv(method, key, iv);
-        }
+        return crypto.createDecipheriv(method, key, iv);
       }
     }
   }

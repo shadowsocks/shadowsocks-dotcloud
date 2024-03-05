@@ -34,10 +34,10 @@ To git@heroku.com:still-tor-8707.git
 Set a few configs:
 
 ```
-$ heroku config:set METHOD=rc4 KEY=foobar
+$ heroku config:set METHOD=table KEY=foobar
 Setting config vars and restarting still-tor-8707... done, v11
 KEY:    foobar
-METHOD: rc4
+METHOD: table
 ```
 
 Install project dependencies with `npm install`:
@@ -50,7 +50,7 @@ $ npm install
 Then run:
 
 ```
-$ node local.js -s still-tor-8707.herokuapp.com -l 1080 -m rc4 -k foobar -r 80
+$ node local.js -s still-tor-8707.herokuapp.com -l 1080 -m table -k foobar -r 80
 server listening at { address: '127.0.0.1', family: 'IPv4', port: 1080 }
 ```
 
@@ -71,8 +71,6 @@ $ heroku logs -t --app still-tor-8707
 Supported Ciphers
 -----------------
 
-- rc4
-- rc4-md5
 - table
 - bf-cfb
 - des-cfb
