@@ -283,3 +283,5 @@ server.on('error', function (e) {
   }
   process.exit(1);
 });
+
+export default server;
