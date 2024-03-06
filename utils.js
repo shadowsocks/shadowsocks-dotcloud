@@ -9,3 +9,17 @@ export function inetNtoa(family, buf) {
     return str;
   }
 }
+
+export function memoize(func) {
+  const cache = {};
+
+  return function (...args) {
+    const key = args.join('');
+    if (cache[key]) return cache[key];
+
+    const result = func.apply(this, args);
+    cache[key] = result;
+
+    return result;
+  };
+}

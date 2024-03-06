@@ -1,11 +1,7 @@
 import crypto from 'crypto';
+import {memoize} from './utils.js';
 
-const bytes_to_key_results = {};
-
-const EVP_BytesToKey = function (password, key_len, iv_len) {
-  if (bytes_to_key_results[`${password}:${key_len}:${iv_len}`]) {
-    return bytes_to_key_results[`${password}:${key_len}:${iv_len}`];
-  }
+const EVP_BytesToKey = memoize(function (password, key_len, iv_len) {
   const m = [];
   let i = 0;
   let count = 0;
@@ -24,9 +20,8 @@ const EVP_BytesToKey = function (password, key_len, iv_len) {
   const ms = Buffer.concat(m);
   const key = ms.slice(0, key_len);
   const iv = ms.slice(key_len, key_len + iv_len);
-  bytes_to_key_results[password] = [key, iv];
   return [key, iv];
-};
+});
 
 const method_supported = {
   'aes-128-cfb': [16, 16],
