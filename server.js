@@ -65,10 +65,8 @@ wss.on('connection', function (ws) {
   console.log('concurrent connections:', wss.clients.size);
   const encryptor = new Encryptor(KEY, METHOD);
   let stage = 0;
-  let headerLength = 0;
   let remote = null;
   let cachedPieces = [];
-  let addrLen = 0;
   let remoteAddr = null;
   let remotePort = null;
   ws.on('message', function (data, flags) {
@@ -77,84 +75,90 @@ wss.on('connection', function (ws) {
       remote.write(data);
     }
     if (stage === 0) {
-      try {
-        const addrtype = data[0];
-        if (addrtype === 3) {
-          addrLen = data[1];
-        } else if (addrtype !== 1 && addrtype !== 4) {
-          console.warn(`unsupported addrtype: ${addrtype}`);
+      let headerLength = 2;
+      if (data.length < headerLength) {
+        ws.close();
+        return;
+      }
+      const addrtype = data[0];
+      if (![1, 3, 4].includes(addrtype)) {
+        console.warn(`unsupported addrtype: ${addrtype}`);
+        ws.close();
+        return;
+      }
+      // read address and port
+      if (addrtype === 1) {
+        // ipv4
+        headerLength = 1 + 4 + 2;
+        if (data.length < headerLength) {
           ws.close();
           return;
         }
-        // read address and port
-        if (addrtype === 1) {
-          // ipv4
-          remoteAddr = inetNtoa(4, data.slice(1, 5));
-          remotePort = data.readUInt16BE(5);
-          headerLength = 1 + 4 + 2;
-        } else if (addrtype === 4) {
-          // ipv6
-          remoteAddr = inetNtoa(6, data.slice(1, 17));
-          remotePort = data.readUInt16BE(17);
-          headerLength = 1 + 16 + 2;
-        } else {
-          remoteAddr = data.slice(2, 2 + addrLen).toString('binary');
-          remotePort = data.readUInt16BE(2 + addrLen);
-          headerLength = 2 + addrLen + 2;
-        }
-
-        // connect to remote server
-        remote = net.connect(remotePort, remoteAddr, function () {
-          console.log('connecting', remoteAddr);
-          remote.write(Buffer.concat(cachedPieces));
-          cachedPieces = null; // save memory
-          stage = 5;
-        });
-        remote.on('data', function (data) {
-          if (ws.readyState === WebSocket.OPEN) {
-            data = encryptor.encrypt(data);
-            ws.send(data, {binary: true}, (err) => {
-              if (err) return;
-              if (ws.bufferedAmount < highWaterMark && remote.isPaused())
-                remote.resume();
-            });
-            if (ws.bufferedAmount >= highWaterMark && !remote.isPaused())
-              remote.pause();
-          }
-        });
-
-        remote.on('end', function () {
+        remoteAddr = inetNtoa(4, data.slice(1, 5));
+        remotePort = data.readUInt16BE(5);
+      } else if (addrtype === 4) {
+        // ipv6
+        headerLength = 1 + 16 + 2;
+        if (data.length < headerLength) {
           ws.close();
-          console.log('remote disconnected');
-        });
-
-        remote.on('error', function (e) {
-          ws.terminate();
-          console.log(`remote: ${e}`);
-        });
-
-        remote.setTimeout(timeout, function () {
-          console.log('remote timeout');
-          remote.destroy();
+          return;
+        }
+        remoteAddr = inetNtoa(6, data.slice(1, 17));
+        remotePort = data.readUInt16BE(17);
+      } else {
+        let addrLen = data[1];
+        headerLength = 2 + addrLen + 2;
+        if (data.length < headerLength) {
           ws.close();
-        });
-
-        if (data.length > headerLength) {
-          // make sure no data is lost
-          let buf = Buffer.alloc(data.length - headerLength);
-          data.copy(buf, 0, headerLength);
-          cachedPieces.push(buf);
+          return;
         }
-        stage = 4;
-      } catch (error) {
-        // may encouter index out of range
-        const e = error;
-        console.warn(e);
-        if (remote) {
-          remote.destroy();
-        }
-        ws.close();
+        remoteAddr = data.slice(2, 2 + addrLen).toString('binary');
+        remotePort = data.readUInt16BE(2 + addrLen);
       }
+
+      // connect to remote server
+      remote = net.connect(remotePort, remoteAddr, function () {
+        console.log('connecting', remoteAddr);
+        remote.write(Buffer.concat(cachedPieces));
+        cachedPieces = null; // save memory
+        stage = 5;
+      });
+      remote.on('data', function (data) {
+        if (ws.readyState === WebSocket.OPEN) {
+          data = encryptor.encrypt(data);
+          ws.send(data, {binary: true}, (err) => {
+            if (err) return;
+            if (ws.bufferedAmount < highWaterMark && remote.isPaused())
+              remote.resume();
+          });
+          if (ws.bufferedAmount >= highWaterMark && !remote.isPaused())
+            remote.pause();
+        }
+      });
+
+      remote.on('end', function () {
+        ws.close();
+        console.log('remote disconnected');
+      });
+
+      remote.on('error', function (e) {
+        ws.terminate();
+        console.log(`remote: ${e}`);
+      });
+
+      remote.setTimeout(timeout, function () {
+        console.log('remote timeout');
+        remote.destroy();
+        ws.close();
+      });
+
+      if (data.length > headerLength) {
+        // make sure no data is lost
+        let buf = Buffer.alloc(data.length - headerLength);
+        data.copy(buf, 0, headerLength);
+        cachedPieces.push(buf);
+      }
+      stage = 4;
     } else if (stage === 4) {
       // remote server not connected
       // cache received buffers
