@@ -106,9 +106,7 @@ var server = net.createServer(function (connection) {
       return;
     }
     if (stage === 0) {
-      const tempBuf = Buffer.alloc(2);
-      tempBuf.write('\u0005\u0000', 0);
-      connection.write(tempBuf);
+      connection.write(Buffer.from([5, 0]));
       stage = 1;
       return;
     }
@@ -209,19 +207,19 @@ var server = net.createServer(function (connection) {
 
       ws.on('open', function () {
         console.log(`connecting ${remoteAddr} via ${aServer}`);
-        let addrToSendBuf = Buffer.from(addrToSend, 'binary');
-        addrToSendBuf = encryptor.encrypt(addrToSendBuf);
-        ws.send(addrToSendBuf, {binary: true});
-        ws.send(encryptor.encrypt(Buffer.concat(cachedPieces)), {
+        const data = Buffer.concat([
+          Buffer.from(addrToSend, 'binary'),
+          ...cachedPieces,
+        ]);
+        cachedPieces = null;
+        ws.send(encryptor.encrypt(data), {
           binary: true,
         });
-        cachedPieces = null; // save memory
         stage = 5;
       });
 
       ws.on('message', function (data, flags) {
-        data = encryptor.decrypt(data);
-        connection.write(data);
+        connection.write(encryptor.decrypt(data));
       });
 
       ws.on('close', function () {

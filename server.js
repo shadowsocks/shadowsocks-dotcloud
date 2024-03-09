@@ -120,7 +120,7 @@ wss.on('connection', function (ws) {
       remote = net.connect(remotePort, remoteAddr, function () {
         console.log('connecting', remoteAddr);
         remote.write(Buffer.concat(cachedPieces));
-        cachedPieces = null; // save memory
+        cachedPieces = null;
         stage = 5;
       });
       remote.on('data', function (data) {
