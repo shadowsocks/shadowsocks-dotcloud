@@ -94,7 +94,7 @@ wss.on('connection', function (ws) {
           ws.close();
           return;
         }
-        remoteAddr = inetNtoa(4, data.slice(1, 5));
+        remoteAddr = inetNtoa(4, data.subarray(1, 5));
         remotePort = data.readUInt16BE(5);
       } else if (addrtype === 4) {
         // ipv6
@@ -103,7 +103,7 @@ wss.on('connection', function (ws) {
           ws.close();
           return;
         }
-        remoteAddr = inetNtoa(6, data.slice(1, 17));
+        remoteAddr = inetNtoa(6, data.subarray(1, 17));
         remotePort = data.readUInt16BE(17);
       } else {
         let addrLen = data[1];
@@ -112,7 +112,7 @@ wss.on('connection', function (ws) {
           ws.close();
           return;
         }
-        remoteAddr = data.slice(2, 2 + addrLen).toString('binary');
+        remoteAddr = data.subarray(2, 2 + addrLen).toString('binary');
         remotePort = data.readUInt16BE(2 + addrLen);
       }
 

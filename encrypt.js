@@ -18,8 +18,8 @@ const EVP_BytesToKey = memoize(function (password, key_len, iv_len) {
     i += 1;
   }
   const ms = Buffer.concat(m);
-  const key = ms.slice(0, key_len);
-  const iv = ms.slice(key_len, key_len + iv_len);
+  const key = ms.subarray(0, key_len);
+  const iv = ms.subarray(key_len, key_len + iv_len);
   return [key, iv];
 });
 
@@ -60,9 +60,9 @@ export class Encryptor {
         iv = iv_;
       }
       if (op === 1) {
-        this.cipher_iv = iv.slice(0, m[1]);
+        this.cipher_iv = iv.subarray(0, m[1]);
       }
-      iv = iv.slice(0, m[1]);
+      iv = iv.subarray(0, m[1]);
       if (op === 1) {
         return crypto.createCipheriv(method, key, iv);
       } else {
@@ -84,9 +84,9 @@ export class Encryptor {
   decrypt(buf) {
     if (!this.decipher) {
       const decipher_iv_len = this.get_cipher_len(this.method)[1];
-      const decipher_iv = buf.slice(0, decipher_iv_len);
+      const decipher_iv = buf.subarray(0, decipher_iv_len);
       this.decipher = this.get_cipher(this.key, this.method, 0, decipher_iv);
-      return this.decipher.update(buf.slice(decipher_iv_len));
+      return this.decipher.update(buf.subarray(decipher_iv_len));
     } else {
       return this.decipher.update(buf);
     }

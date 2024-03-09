@@ -136,7 +136,7 @@ var server = net.createServer(function (connection) {
         connection.end();
         return;
       }
-      addrToSend = data.slice(3, 4).toString('binary');
+      addrToSend = data.subarray(3, 4).toString('binary');
 
       // read address and port
       if (addrtype === 1) {
@@ -146,8 +146,8 @@ var server = net.createServer(function (connection) {
           connection.end();
           return;
         }
-        remoteAddr = inetNtoa(4, data.slice(4, 8));
-        addrToSend += data.slice(4, 10).toString('binary');
+        remoteAddr = inetNtoa(4, data.subarray(4, 8));
+        addrToSend += data.subarray(4, 10).toString('binary');
         remotePort = data.readUInt16BE(8);
       } else if (addrtype === 4) {
         // ipv6
@@ -156,8 +156,8 @@ var server = net.createServer(function (connection) {
           connection.end();
           return;
         }
-        remoteAddr = inetNtoa(6, data.slice(4, 20));
-        addrToSend += data.slice(4, 22).toString('binary');
+        remoteAddr = inetNtoa(6, data.subarray(4, 20));
+        addrToSend += data.subarray(4, 22).toString('binary');
         remotePort = data.readUInt16BE(20);
       } else {
         const addrLen = data[4];
@@ -166,8 +166,8 @@ var server = net.createServer(function (connection) {
           connection.end();
           return;
         }
-        remoteAddr = data.slice(5, 5 + addrLen).toString('binary');
-        addrToSend += data.slice(4, 5 + addrLen + 2).toString('binary');
+        remoteAddr = data.subarray(5, 5 + addrLen).toString('binary');
+        addrToSend += data.subarray(4, 5 + addrLen + 2).toString('binary');
         remotePort = data.readUInt16BE(5 + addrLen);
       }
       let buf = Buffer.alloc(10);
