@@ -55,10 +55,7 @@ export class Encryptor {
     password = Buffer.from(password, 'binary');
     const m = this.get_cipher_len(method);
     if (m) {
-      const [key, iv_] = EVP_BytesToKey(password, m[0], m[1]);
-      if (!iv) {
-        iv = iv_;
-      }
+      const [key] = EVP_BytesToKey(password, m[0], m[1]);
       if (op === 1) {
         this.cipher_iv = iv.subarray(0, m[1]);
       }
