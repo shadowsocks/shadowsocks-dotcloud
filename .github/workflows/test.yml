@@ -1,0 +1,27 @@
+name: 'Test'
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  tests:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: cachix/install-nix-action@v26
+    - uses: cachix/cachix-action@v14
+      with:
+        name: devenv
+    - name: Install devenv.sh
+      run: nix profile install --accept-flake-config tarball+https://install.devenv.sh/latest
+
+    - name: Build the devenv shell and run any pre-commit hooks
+      run: devenv ci
+
+    - name: Run a single command in the devenv shell
+      run: devenv shell bun run test.js
