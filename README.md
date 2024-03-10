@@ -1,53 +1,76 @@
-shadowsocks-dotcloud
-===========
+# shadowsocks-heroku
 
-[![Build Status](https://travis-ci.org/clowwindy/shadowsocks-dotcloud.png)](https://travis-ci.org/clowwindy/shadowsocks-dotcloud)
+shadowsocks-heroku is a lightweight tunnel proxy which can help you get through firewalls. It is a port of [shadowsocks](https://github.com/clowwindy/shadowsocks), but through a different protocol.
 
-shadowsocks-dotcloud is a lightweight tunnel proxy which can help you get through
- firewalls. It is a port of [shadowsocks](https://github.com/clowwindy/shadowsocks), but
- through a different protocol.
+shadowsocks-heroku uses WebSocket instead of raw sockets, so it can be deployed on [Heroku](https://www.heroku.com/).
 
-shadowsocks-dotcloud uses WebSockets instead of raw sockets,
- so it can be deployed on [dotcloud](https://www.dotcloud.com/).
+Notice that the protocol is INCOMPATIBLE with shadowsocks.
 
-Notice that the protocol is INCOMPATIBLE with the origin shadowsocks.
+## Heroku
 
-usage
------------
+### Usage
 
-Sign up for [dotcloud](https://www.dotcloud.com/).
+```
+$ heroku create
+Creating still-tor-8707... done, stack is cedar-14
+http://still-tor-8707.herokuapp.com/ | git@heroku.com:still-tor-8707.git
+```
 
-Install [dotcloud CLI](https://docs.dotcloud.com/0.9/firststeps/install/).
+Push the code to Heroku.
 
-Put the code somewhere, for example shadowsocks-dotcloud/. Edit `shadowsocks/config.json`, change the following values:
+```
+$ git push heroku master
+…
+-----> Compressing... done, 5.1MB
+-----> Launching... done, v3
+       http://still-tor-8707.herokuapp.com/ deployed to Heroku
 
-    server          your server hostname, for example, shadowsocks-YOURUSERNAME.dotcloud.com
-    local_port      local port
-    password        a password used to encrypt transfer
-    timeout         in seconds
-    method          encryption method, null by default, or use "rc4"
+To git@heroku.com:still-tor-8707.git
+ * [new branch]      master -> master
+```
 
-Upload the code. You can choose your own app name other than `shadowsocks`. You'll see your hostname at the end.
+Set a few configs:
 
-    $ dotcloud create shadowsocks
-    Created application "shadowsocks" using the flavor "sandbox"
-    ...
-    $ dotcloud push --application shadowsocks shadowsocks-dotcloud/
-    # upload shadowsocks-dotcloud/ ssh://dotcloud@uploader.dotcloud.com:443/shadowsocks
-    ...
-    Deployment finished. Your application is available at the following URLs
-    www: http://shadowsocks-YOURUSERNAME.dotcloud.com/
+```
+$ heroku config:set METHOD=aes-128-cfb KEY=foobar
+Setting config vars and restarting still-tor-8707... done, v11
+KEY:    foobar
+METHOD: aes-128-cfb
+```
 
-Open terminal, cd into shadowsocks, run `node local.js`.
+Install project dependencies with `npm install`:
 
-Change proxy settings of your browser into
+```
+$ npm install
+…
+```
 
-    SOCKS5 127.0.0.1:local_port
+Then run:
 
+```
+$ node local.js -s still-tor-8707.herokuapp.com -l 1080 -m aes-128-cfb -k foobar -r 80
+server listening at { address: '127.0.0.1', family: 'IPv4', port: 1080 }
+```
 
-troubleshooting
-----------------
+Change proxy settings of your browser into:
+
+```
+SOCKS5 127.0.0.1:1080
+```
+
+### Troubleshooting
 
 If there is something wrong, you can check the logs by:
 
-    $ dotcloud logs www --application shadowsocks
+```
+$ heroku logs -t --app still-tor-8707
+```
+
+## Supported Ciphers
+
+- aes-128-cfb
+- aes-192-cfb
+- aes-256-cfb
+- camellia-128-cfb
+- camellia-192-cfb
+- camellia-256-cfb
