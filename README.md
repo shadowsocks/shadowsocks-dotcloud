@@ -1,5 +1,4 @@
-shadowsocks-heroku
-==================
+# shadowsocks-heroku
 
 shadowsocks-heroku is a lightweight tunnel proxy which can help you get through firewalls. It is a port of [shadowsocks](https://github.com/clowwindy/shadowsocks), but through a different protocol.
 
@@ -7,8 +6,7 @@ shadowsocks-heroku uses WebSocket instead of raw sockets, so it can be deployed 
 
 Notice that the protocol is INCOMPATIBLE with shadowsocks.
 
-Heroku
-------
+## Heroku
 
 ### Usage
 
@@ -68,8 +66,7 @@ If there is something wrong, you can check the logs by:
 $ heroku logs -t --app still-tor-8707
 ```
 
-Supported Ciphers
------------------
+## Supported Ciphers
 
 - aes-128-cfb
 - aes-192-cfb
